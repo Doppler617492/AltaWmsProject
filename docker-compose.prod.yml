@@ -68,6 +68,7 @@ services:
     command: >
       sh -c "npm ci --include=dev &&
              npm run build &&
+             npm run typeorm schema:sync -- -d dist/data-source.js &&
              npm run typeorm migration:run -- -d dist/data-source.js &&
              echo 'MIGRATIONS APPLIED'"
     restart: "no"
