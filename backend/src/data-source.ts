@@ -43,7 +43,12 @@ import { UserRole } from './entities/user-role.entity';
 
 const AppDataSource = new DataSource({
   type: 'postgres',
-  url: process.env.DB_URL || 'postgresql://wms_user:wms_password@localhost:5432/wms',
+  host: process.env.DB_HOST || undefined,
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined,
+  username: process.env.DB_USER || undefined,
+  password: process.env.DB_PASS || undefined,
+  database: process.env.DB_NAME || undefined,
+  url: process.env.DB_URL || undefined,
   entities: [
     Supplier,
     Item,
@@ -92,4 +97,3 @@ const AppDataSource = new DataSource({
 });
 
 export default AppDataSource;
-

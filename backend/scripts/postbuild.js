@@ -24,20 +24,30 @@ mirrorDirs.forEach((dir) => {
 });
 
 const stub = [
-  "const exported = require('./src/data-source.js');",
-  'module.exports = exported;',
-  "if (exported && typeof exported === 'object') {",
-  "  if (exported.default && !('default' in module.exports)) {",
-  '    module.exports.default = exported.default;',
-  '  }',
-  "  if (exported.AppDataSource && !('AppDataSource' in module.exports)) {",
-  '    module.exports.AppDataSource = exported.AppDataSource;',
-  '  }',
-  '}',
+  "const { DataSource } = require('typeorm');",
+  "const compiled = require('./src/data-source.js');",
+  "const entities = (compiled.default && compiled.default.options?.entities) || (compiled.AppDataSource && compiled.AppDataSource.options?.entities) || [];",
+  "const migrations = (compiled.default && compiled.default.options?.migrations) || (compiled.AppDataSource && compiled.AppDataSource.options?.migrations) || ['dist/migrations/*.js'];",
+  "const cfg = {",
+  "  type: 'postgres',",
+  "  host: process.env.DB_HOST,",
+  "  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined,",
+  "  username: process.env.DB_USER,",
+  "  password: process.env.DB_PASS,",
+  "  database: process.env.DB_NAME,",
+  "  url: process.env.DB_URL || undefined,",
+  "  entities,",
+  "  migrations,",
+  "  synchronize: false,",
+  "  logging: false,",
+  "};",
+  "const ds = new DataSource(cfg);",
+  "module.exports = ds;",
+  "module.exports.default = ds;",
+  "module.exports.AppDataSource = ds;",
   '',
 ].join('\n');
 
 fs.writeFileSync(targetPath, stub);
 console.log('[postbuild] Wrote dist/data-source.js stub.');
-
 
