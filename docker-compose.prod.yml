@@ -24,8 +24,8 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.backend
     container_name: alta-wms-backend-prod
     environment:
       DB_URL: postgresql://wms_user:${DB_PASSWORD}@db:5432/wms
@@ -52,8 +52,8 @@ services:
 
   frontend-admin:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.frontend-admin
     container_name: alta-wms-frontend-admin-prod
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
@@ -69,8 +69,8 @@ services:
 
   frontend-pwa:
     build:
-      context: ./frontend-pwa
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.frontend-pwa
     container_name: alta-wms-frontend-pwa-prod
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
