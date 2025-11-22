@@ -21,6 +21,7 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
+
             # Ensure base directory
             if [ ! -d /opt/alta-wms/.git ]; then
               mkdir -p /opt/alta-wms
@@ -36,27 +37,33 @@ jobs:
               git reset --hard origin/main
             fi
 
-            # Install Docker/Compose if missing
+            # Install Docker & Compose
             if ! command -v docker >/dev/null 2>&1; then
               curl -fsSL https://get.docker.com -o get-docker.sh
               sh get-docker.sh
-              usermod -aG docker $USER || true
             fi
+
             if ! docker compose version >/dev/null 2>&1; then
               apt-get update -y && apt-get install -y docker-compose-plugin
             fi
 
+            # Prepare directories
             mkdir -p /opt/alta-wms/uploads /opt/alta-wms/backups /opt/alta-wms/logs
-            # Write production env from secret
+
+            # Write production `.env`
             if [ -n "${{ secrets.ENV_PRODUCTION }}" ]; then
               echo "${{ secrets.ENV_PRODUCTION }}" > /opt/alta-wms/.env
               chmod 600 /opt/alta-wms/.env
             fi
 
-            docker compose -f docker-compose.prod.yml up -d --build
+            # Run docker compose from correct path
+            cd /opt/alta-wms
+
+            docker compose -f /opt/alta-wms/docker-compose.prod.yml up -d --build
             sleep 5
-            docker compose -f docker-compose.prod.yml ps
-            # Reload Nginx if running as system service
+            docker compose -f /opt/alta-wms/docker-compose.prod.yml ps
+
+            # Reload Nginx
             if command -v systemctl >/dev/null 2>&1; then
               systemctl reload nginx || true
             fi
