@@ -21,7 +21,7 @@ jobs:
           debug: true
           script_stop: true
           script: |
-            set -euo pipefail
+            set -euxo pipefail
 
             # Ensure base directory
             if [ ! -d /opt/alta-wms/.git ]; then
@@ -60,7 +60,10 @@ jobs:
             # Run docker compose from correct path
             cd /opt/alta-wms
 
-            docker compose -f /opt/alta-wms/docker-compose.prod.yml up -d --build
+            if ! docker compose -f /opt/alta-wms/docker-compose.prod.yml up -d --build; then
+              docker compose -f /opt/alta-wms/docker-compose.prod.yml logs --no-color || true
+              exit 1
+            fi
             sleep 5
             docker compose -f /opt/alta-wms/docker-compose.prod.yml ps
 
