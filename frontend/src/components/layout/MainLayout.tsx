@@ -95,8 +95,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         // WebSocket host and path (prod: https://admin.cungu.com/socket.io/, dev fallback via envs)
         const base =
           process.env.NEXT_PUBLIC_WS_BASE ||
-          `${window.location.origin}` ||
-          'http://localhost:8000';
+          (process.env.NODE_ENV === 'production'
+            ? `${window.location.origin}`
+            : 'http://localhost:8000');
         const wsPath =
           process.env.NEXT_PUBLIC_WS_URL ||
           process.env.NEXT_PUBLIC_WS_PATH ||
