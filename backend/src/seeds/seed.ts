@@ -117,7 +117,7 @@ export async function seedDatabase(dataSource: DataSource) {
           active: true,
           email: 'admin@altawms.local',
           password_hash: await bcrypt.hash('Dekodera1989@', 10),
-        } as any);
+        } as Partial<User>) as User;
       } else {
         admin.role = 'ADMIN';
         admin.is_active = true;
