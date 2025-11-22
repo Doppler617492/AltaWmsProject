@@ -40,8 +40,8 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
+      migration-runner:
+        condition: service_completed_successfully
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
@@ -49,6 +49,27 @@ services:
     networks:
       - alta-wms-network
     command: npm run start:prod
+
+  migration-runner:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: alta-wms-migration-runner
+    environment:
+      DB_URL: postgresql://wms_user:${DB_PASSWORD}@db:5432/wms
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - alta-wms-network
+    command: >
+      sh -c "npm ci &&
+             npm run build &&
+             npm run typeorm migration:run &&
+             echo 'MIGRATIONS APPLIED'"
+    restart: "no"
 
   frontend-admin:
     build:
