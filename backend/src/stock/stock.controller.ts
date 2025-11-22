@@ -18,14 +18,16 @@ export class StockController {
   // 1) Pregled po artiklu
   @Get('by-item')
   async byItem(@Req() req: any, @Query('sku') sku?: string, @Query('limit') limit?: string, @Query('offset') offset?: string) {
-    this.ensureRole(req.user?.role || '', ['admin','menadzer','sef_magacina']);
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin','menadzer','sef_magacina']);
     return this.stockService.getByItem({ sku: sku || undefined, limit: limit ? parseInt(limit) : undefined, offset: offset ? parseInt(offset) : undefined });
   }
 
   // 2) Pregled po lokaciji
   @Get('by-location')
   async byLocation(@Req() req: any, @Query('location_code') locationCode: string) {
-    this.ensureRole(req.user?.role || '', ['admin','menadzer','sef_magacina']);
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin','menadzer','sef_magacina']);
     return this.stockService.getByLocationCode(locationCode);
   }
 
@@ -54,7 +56,7 @@ export class StockController {
   // By-document inventory impact (admin/menadzer/sef/magacioner)
   @Get('inventory/by-document/:id')
   async getByDocument(@Param('id') id: string, @Req() req: any) {
-    const role = req.user?.role;
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
     const allowed = ['admin', 'menadzer', 'sef', 'sef_magacina', 'magacioner'];
     if (!allowed.includes(role)) {
       throw new ForbiddenException('Pristup dozvoljen samo za admin/menadžer/šef/magacioner');
@@ -71,14 +73,16 @@ export class StockController {
     @Query('item_sku') itemSku?: string,
     @Query('limit') limit?: string,
   ) {
-    this.ensureRole(req.user?.role || '', ['admin','menadzer','sef_magacina']);
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin','menadzer','sef_magacina']);
     return this.stockService.getMovements({ since, locationCode, itemSku, limit: limit ? parseInt(limit) : 50 });
   }
 
   // 4) Hotspots (admin i sef_magacina)
   @Get('hotspots')
   async hotspots(@Req() req: any) {
-    this.ensureRole(req.user?.role || '', ['admin','sef_magacina']);
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin','sef_magacina']);
     return this.stockService.getHotspots();
   }
 
@@ -89,7 +93,8 @@ export class StockController {
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
-    this.ensureRole(req.user?.role || '', ['admin', 'menadzer', 'sef_magacina', 'sef', 'sef_prodavnice']);
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin', 'menadzer', 'sef_magacina', 'sef', 'sef_prodavnice']);
     return this.stockService.getPantheonItems({
       search: search || undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
@@ -99,7 +104,8 @@ export class StockController {
 
   @Post('pantheon/sync')
   async pantheonSync(@Req() req: any, @Body() body: { full?: boolean; force?: boolean } = {}) {
-    this.ensureRole(req.user?.role || '', ['admin', 'menadzer']);
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin', 'menadzer']);
     return this.stockService.syncPantheonItems({ full: !!body.full, force: !!body.force });
   }
 
@@ -113,7 +119,8 @@ export class StockController {
     @Query('item_sku') itemSku?: string,
     @Query('limit') limit?: string,
   ) {
-    this.ensureRole(req.user?.role || '', ['admin','menadzer','sef_magacina']);
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin','menadzer','sef_magacina']);
     const rows = await this.movements(req, since, locationCode, itemSku, limit);
     const header = ['timestamp','user_full_name','reason','item_sku','item_name','quantity_change','from_location_code','to_location_code','reference_document_number'];
     const esc = (v: any) => {

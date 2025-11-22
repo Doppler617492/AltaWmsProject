@@ -16,20 +16,23 @@ export class DashboardController {
 
   @Get('overview')
   async overview(@Req() req: any) {
-    this.ensureRole(req.user?.role || '');
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role);
     return this.svc.getOverview();
   }
 
   @Get('live-events')
   async liveEvents(@Req() req: any, @Query('limit') limit?: string) {
-    this.ensureRole(req.user?.role || '');
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role);
     const limitNum = limit ? parseInt(limit, 10) : 100;
     return this.svc.getLiveEvents(limitNum);
   }
 
   @Delete('live-events')
   async clearLiveEvents(@Req() req: any) {
-    this.ensureRole(req.user?.role || '');
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role);
     return this.svc.clearLiveEvents();
   }
 }

@@ -9,7 +9,13 @@ export class WorkforceController {
   constructor(private readonly service: WorkforceService, private readonly analytics: AnalyticsPushService) {}
 
   private ensureRole(req: any, allowed: string[]) {
-    const role = (req.user?.role || '').toString().toLowerCase();
+    const role = (
+      req.user?.role ||
+      (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') ||
+      ''
+    )
+      .toString()
+      .toLowerCase();
     const allowedSet = allowed.map(r => r.toLowerCase());
     if (!allowedSet.includes(role)) {
       throw new ForbiddenException('Zabranjen pristup');
