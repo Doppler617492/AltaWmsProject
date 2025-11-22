@@ -18,6 +18,9 @@ class SocketIoAdapter extends IoAdapter {
         methods: ['GET', 'POST'],
         credentials: true,
       },
+      transports: ['websocket', 'polling'],
+      pingInterval: 25000,
+      pingTimeout: 60000,
     };
     const server = super.createIOServer(port, opts);
     return server;
@@ -41,6 +44,8 @@ async function bootstrap() {
         'http://localhost:8090', // TV wallboard
         'http://zebra:8080',       // Future Zebra handheld in Docker
         'https://admin.cungu.com',
+        'https://pwa.cungu.com',
+        'https://tv.cungu.com',
         'https://api.cungu.com',
       ];
   
