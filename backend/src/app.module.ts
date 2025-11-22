@@ -77,6 +77,7 @@ import { Permission } from './entities/permission.entity';
 import { RolePermission } from './entities/role-permission.entity';
 import { UserRole } from './entities/user-role.entity';
 import { EventsModule } from './events/events.module';
+import { WsModule } from './ws/ws.module';
 import { join } from 'path';
 
 @Module({
@@ -130,6 +131,7 @@ import { join } from 'path';
     SkartModule,
     PovracajModule,
     EventsModule,
+    WsModule,
   ],
   controllers: [PwaController],
   providers: [DatabaseService],
