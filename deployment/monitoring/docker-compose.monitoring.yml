@@ -1,0 +1,92 @@
+version: '3.9'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring_net
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    networks:
+      - monitoring_net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - monitoring_net
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    env_file:
+      - ../env.production.example
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_PATHS_CONFIG: /etc/grafana/grafana.ini
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - ./grafana.ini:/etc/grafana/grafana.ini:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring_net
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - monitoring_net
+
+  sentry-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: sentry
+      POSTGRES_PASSWORD: sentrypass
+      POSTGRES_DB: sentry
+    volumes:
+      - sentry_pgdata:/var/lib/postgresql/data
+    networks:
+      - monitoring_net
+
+  sentry:
+    image: getsentry/sentry:24.0.0
+    depends_on:
+      - sentry-postgres
+      - redis
+    environment:
+      SENTRY_SECRET_KEY: placeholder-secret
+      SENTRY_REDIS: redis://redis:6379/0
+      SENTRY_DB_USER: sentry
+      SENTRY_DB_PASSWORD: sentrypass
+      SENTRY_DB_HOST: sentry-postgres
+      SENTRY_DB_NAME: sentry
+      SENTRY_PROMETHEUS_HOST: prometheus
+      SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+    ports:
+      - "9000:9000"
+    networks:
+      - monitoring_net
+
+networks:
+  monitoring_net:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  sentry_pgdata:
+
