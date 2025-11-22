@@ -1,0 +1,31 @@
+# Backend Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY backend/package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY backend/ .
+
+# Cache-buster to ensure a fresh build when source changes are not detected by Docker layer cache
+ARG CACHEBUST=1
+RUN echo "CACHEBUST=$CACHEBUST"
+
+# Build the NestJS app
+# Ensure clean build directory to avoid permission or stale artifacts issues
+RUN rm -rf dist && npm run build
+
+# Optional: analytics push URL and API key placeholder (config at runtime)
+ENV ANALYTICS_API_KEY=""
+ENV ANALYTICS_PUSH_URL=""
+
+# Expose port
+EXPOSE 8000
+
+# Start the application
+CMD ["npm", "run", "start:prod"]

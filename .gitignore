@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+
+# Next.js build artifacts
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Backend artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+
+# Docker
+docker-compose.override.yml
+docker-compose.*.yml
+docker-compose.prod.yml.local
+.dockerignore
+
+# Environment variables
+.env
+.env.*.local
+*.key
+*.pem
+
+# Logs and runtime
+logs/
+*.log
+uploads/
+tmp/
+temp/
+cache/
+*.pid
+
+# Editor/OS
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.vcxproj
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Coverage & test results
+coverage/
+test-results/
+.nyc_output/

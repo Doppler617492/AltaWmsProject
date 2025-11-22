@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <style>
+      .alta-black { fill: #000000; }
+      .alta-yellow { fill: #FFD600; }
+    </style>
+  </defs>
+  <path class="alta-black" d="M10 10 V 90 H 30 V 10 Z" />
+  <path class="alta-yellow" d="M30 35 L 55 60 L 75 90 L 55 90 L 30 55 Z" />
+  <path class="alta-yellow" d="M30 15 H 65 L 80 25 L 65 35 H 30 L 45 25 Z" />
+  <path class="alta-black" d="M30 40 H 55 L 70 50 L 55 60 H 30 L 45 50 Z" />
+  <path class="alta-black" d="M30 65 H 50 L 65 75 L 50 85 H 30 L 45 75 Z" />
+</svg>
+

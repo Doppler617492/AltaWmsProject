@@ -1,0 +1,15 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY frontend-pwa/package*.json ./
+RUN npm ci
+
+# Copy source and build
+COPY frontend-pwa/ .
+RUN npm run build
+
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["npm", "run", "start"]

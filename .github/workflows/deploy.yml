@@ -1,0 +1,71 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy project to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "./"
+          target: "/opt/alta-wms"
+          rm: false
+          overwrite: true
+          strip_components: 0
+          tar_tmp_path: "/tmp"
+          # Exclude heavy/volatile files
+          exclude: |
+            .git
+            node_modules
+            **/node_modules
+            **/.next
+            uploads
+            backups
+            logs
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            # Install docker if missing
+            if ! command -v docker >/dev/null 2>&1; then
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sh get-docker.sh
+              usermod -aG docker $USER || true
+            fi
+            # Install compose plugin if missing
+            if ! docker compose version >/dev/null 2>&1; then
+              apt-get update -y && apt-get install -y docker-compose-plugin
+            fi
+
+            mkdir -p /opt/alta-wms/uploads /opt/alta-wms/backups /opt/alta-wms/logs
+
+            # Write production env from secret
+            if [ -n "${{ secrets.ENV_PRODUCTION }}" ]; then
+              echo "${{ secrets.ENV_PRODUCTION }}" > /opt/alta-wms/.env
+              chmod 600 /opt/alta-wms/.env
+            fi
+
+            cd /opt/alta-wms
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            # Basic health check
+            sleep 5
+            docker compose -f docker-compose.prod.yml ps

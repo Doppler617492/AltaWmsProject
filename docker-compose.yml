@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    container_name: alta-wms-db
+    environment:
+      POSTGRES_USER: wms_user
+      POSTGRES_PASSWORD: wms_password
+      POSTGRES_DB: wms
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wms_user -d wms"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: alta-wms-backend
+    environment:
+      DB_URL: postgresql://wms_user:wms_password@db:5432/wms
+      JWT_SECRET: samo-za-dev
+      PORT: 8000
+      NODE_ENV: development
+      ANALYTICS_API_KEY: dev-analytics-key
+      TV_KIOSK_TOKEN: ${TV_KIOSK_TOKEN:-change_me_strong_token}
+      PERFORMANCE_REFRESH_INTERVAL: ${PERFORMANCE_REFRESH_INTERVAL:-30}
+      CUNGU_API_ENABLED: ${CUNGU_API_ENABLED:-true}
+      # Optional Power BI streaming push URL (set to enable real-time push)
+      # ANALYTICS_PUSH_URL: "https://api.powerbi.com/beta/.../datasets/.../rows?key=..."
+      # Default field mapping for Power BI Streaming dataset (PascalCase)
+      ANALYTICS_PUSH_MAP: '{"assignee_id":"AssigneeId","task_type":"TaskType","task_id":"TaskId","user_id":"UserId","user_name":"UserName","status":"Status","started_at":"StartedAt","completed_at":"CompletedAt","duration_seconds":"DurationSec","policy":"Policy","team_id":"TeamId","document_number":"DocumentNumber","order_number":"OrderNumber","pallet_id":"PalletId","pushed_at":"PushedAt"}'
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Run in production mode using the prebuilt dist inside the image
+    command: npm run start:prod
+
+  frontend-admin:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-admin
+    container_name: alta-wms-frontend-admin
+    environment:
+      API_BASE_URL: http://backend:8000
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_TV_KIOSK_TOKEN: ${TV_KIOSK_TOKEN:-change_me_strong_token}
+      NODE_ENV: development
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "3003:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+
+  frontend-pwa:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-pwa
+    container_name: alta-wms-frontend-pwa
+    environment:
+      API_BASE_URL: http://backend:8000
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_TV_KIOSK_TOKEN: ${TV_KIOSK_TOKEN:-change_me_strong_token}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8080:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend-pwa:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+
+  frontend-tv:
+    build:
+      context: ./frontend-tv
+    container_name: alta-wms-frontend-tv
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: http://backend:8000
+      NEXT_PUBLIC_TV_KIOSK_TOKEN: ${TV_KIOSK_TOKEN:-change_me_strong_token}
+      PORT: 8090
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8090:8090"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: alta_wms_pgdata

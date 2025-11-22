@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="16" ry="16" fill="#001F3F"/>
+  <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="#FFD700" font-size="24" font-family="Inter,sans-serif">Alta</text>
+  <text x="50%" y="75%" dominant-baseline="middle" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Inter,sans-serif">TV</text>
+</svg>
+
