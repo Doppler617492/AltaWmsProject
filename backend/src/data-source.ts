@@ -36,6 +36,10 @@ import { SkartDocument } from './skart/entities/skart-document.entity';
 import { SkartItem } from './skart/entities/skart-item.entity';
 import { SkartPhoto } from './skart/entities/skart-photo.entity';
 import { AuditLog } from './entities/audit-log.entity';
+import { Role } from './entities/role.entity';
+import { Permission } from './entities/permission.entity';
+import { RolePermission } from './entities/role-permission.entity';
+import { UserRole } from './entities/user-role.entity';
 
 const AppDataSource = new DataSource({
   type: 'postgres',
@@ -77,6 +81,10 @@ const AppDataSource = new DataSource({
     SkartItem,
     SkartPhoto,
     AuditLog,
+    Role,
+    Permission,
+    RolePermission,
+    UserRole,
   ],
   migrations: ['dist/migrations/*.js'],
   synchronize: false,
@@ -84,5 +92,4 @@ const AppDataSource = new DataSource({
 });
 
 export default AppDataSource;
-
 

@@ -72,6 +72,10 @@ import { PovracajModule } from './povracaj/povracaj.module';
 import { PovracajDocument } from './povracaj/entities/povracaj-document.entity';
 import { PovracajItem } from './povracaj/entities/povracaj-item.entity';
 import { PovracajPhoto } from './povracaj/entities/povracaj-photo.entity';
+import { Role } from './entities/role.entity';
+import { Permission } from './entities/permission.entity';
+import { RolePermission } from './entities/role-permission.entity';
+import { UserRole } from './entities/user-role.entity';
 
 @Module({
   imports: [
@@ -81,11 +85,11 @@ import { PovracajPhoto } from './povracaj/entities/povracaj-photo.entity';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DB_URL || 'postgresql://wms_user:wms_password@localhost:5432/wms',
-      entities: [Supplier, Item, StockLocation, Zone, Aisle, Rack, Location, LocationStatus, User, ReceivingDocument, ReceivingItem, ReceivingPhoto, InventoryMovement, Inventory, UserShift, CycleCountTask, CycleCountLine, PutawayTask, ShippingOrder, ShippingOrderLine, ShippingLoadPhoto, ExceptionAckLog, OrchestrationActionLog, SlaEvent, SlaComplianceCache, LocationLabel, PrintJob, Store, Team, TeamMember, TaskAssignee, TaskAssignmentInfo, SkartDocument, SkartItem, SkartPhoto, AuditLog, PantheonItem, PovracajDocument, PovracajItem, PovracajPhoto],
+      entities: [Supplier, Item, StockLocation, Zone, Aisle, Rack, Location, LocationStatus, User, ReceivingDocument, ReceivingItem, ReceivingPhoto, InventoryMovement, Inventory, UserShift, CycleCountTask, CycleCountLine, PutawayTask, ShippingOrder, ShippingOrderLine, ShippingLoadPhoto, ExceptionAckLog, OrchestrationActionLog, SlaEvent, SlaComplianceCache, LocationLabel, PrintJob, Store, Team, TeamMember, TaskAssignee, TaskAssignmentInfo, SkartDocument, SkartItem, SkartPhoto, AuditLog, PantheonItem, PovracajDocument, PovracajItem, PovracajPhoto, Role, Permission, RolePermission, UserRole],
       synchronize: false,
       logging: false,
     }),
-    TypeOrmModule.forFeature([Supplier, Item, StockLocation, Zone, Aisle, Rack, Location, LocationStatus, User, ReceivingDocument, ReceivingItem, ReceivingPhoto, InventoryMovement, Inventory, UserShift, CycleCountTask, CycleCountLine, PutawayTask, ShippingOrder, ShippingOrderLine, ShippingLoadPhoto, ExceptionAckLog, OrchestrationActionLog, SlaEvent, SlaComplianceCache, LocationLabel, PrintJob, Store, Team, TeamMember, TaskAssignee, TaskAssignmentInfo, SkartDocument, SkartItem, SkartPhoto, AuditLog, PantheonItem, PovracajDocument, PovracajItem, PovracajPhoto]),
+    TypeOrmModule.forFeature([Supplier, Item, StockLocation, Zone, Aisle, Rack, Location, LocationStatus, User, ReceivingDocument, ReceivingItem, ReceivingPhoto, InventoryMovement, Inventory, UserShift, CycleCountTask, CycleCountLine, PutawayTask, ShippingOrder, ShippingOrderLine, ShippingLoadPhoto, ExceptionAckLog, OrchestrationActionLog, SlaEvent, SlaComplianceCache, LocationLabel, PrintJob, Store, Team, TeamMember, TaskAssignee, TaskAssignmentInfo, SkartDocument, SkartItem, SkartPhoto, AuditLog, PantheonItem, PovracajDocument, PovracajItem, PovracajPhoto, Role, Permission, RolePermission, UserRole]),
     AuthModule, 
     HealthModule, 
     AiAgentModule,

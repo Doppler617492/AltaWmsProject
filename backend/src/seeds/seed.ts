@@ -8,6 +8,10 @@ import { User } from '../entities/user.entity';
 import { Store } from '../entities/store.entity';
 import { seedWarehouse } from './warehouse-seed';
 import { seedSkart } from './skart-seed';
+import { Role } from '../entities/role.entity';
+import { Permission } from '../entities/permission.entity';
+import { RolePermission } from '../entities/role-permission.entity';
+import { UserRole } from '../entities/user-role.entity';
 
 export async function seedDatabase(dataSource: DataSource) {
   const supplierRepo = dataSource.getRepository(Supplier);
@@ -17,42 +21,104 @@ export async function seedDatabase(dataSource: DataSource) {
   const receivingItemRepo = dataSource.getRepository(ReceivingItem);
   const userRepo = dataSource.getRepository(User);
   const storeRepo = dataSource.getRepository(Store);
+  const roleRepo = dataSource.getRepository(Role);
+  const permRepo = dataSource.getRepository(Permission);
+  const rolePermRepo = dataSource.getRepository(RolePermission);
+  const userRoleRepo = dataSource.getRepository(UserRole);
 
-  // Always ensure base admin exists
+  // Always ensure base RBAC + admin exists
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const bcrypt = require('bcryptjs');
+    const ensureRole = async (name: string) => {
+      let role = await roleRepo.findOne({ where: { name } });
+      if (!role) {
+        role = roleRepo.create({ name });
+        await roleRepo.save(role);
+      }
+      return role;
+    };
+    const ensurePermission = async (name: string) => {
+      let perm = await permRepo.findOne({ where: { name } });
+      if (!perm) {
+        perm = permRepo.create({ name });
+        await permRepo.save(perm);
+      }
+      return perm;
+    };
+    const ensureRolePermission = async (role: Role, perm: Permission) => {
+      const exists = await rolePermRepo.findOne({ where: { role: { id: role.id }, permission: { id: perm.id } } });
+      if (!exists) {
+        const rp = rolePermRepo.create({ role, permission: perm });
+        await rolePermRepo.save(rp);
+      }
+    };
+    const ensureUserRole = async (user: User, role: Role) => {
+      const exists = await userRoleRepo.findOne({ where: { user: { id: user.id }, role: { id: role.id } } });
+      if (!exists) {
+        const ur = userRoleRepo.create({ user, role });
+        await userRoleRepo.save(ur);
+      }
+    };
+
+    const adminRole = await ensureRole('ADMIN');
+    await ensureRole('MANAGER');
+    await ensureRole('WORKER');
+
+    const permissionNames = [
+      'dashboard:view',
+      'workforce:read',
+      'stock:read',
+      'performance:read',
+      'receiving:read',
+      'shipping:read',
+      'kpi:read',
+      'exceptions:read',
+      'sla:read',
+      'labels:read',
+      'putaway:read',
+      'cyclecount:read',
+      'users:read',
+      'users:write',
+    ];
+    const perms = [];
+    for (const p of permissionNames) {
+      perms.push(await ensurePermission(p));
+    }
+    for (const perm of perms) {
+      await ensureRolePermission(adminRole, perm);
+    }
+
     const ensureAdmin = async () => {
-      const repo = dataSource.getRepository(User);
-      const existingAdmin = await repo.findOne({
+      let admin = await userRepo.findOne({
         where: [
           { role: 'ADMIN' as any },
           { role: 'admin' as any },
           { username: 'admin' },
         ],
       });
-      if (existingAdmin) {
-        if (!existingAdmin.password_hash) {
-          existingAdmin.password_hash = await bcrypt.hash('Dekodera1989@', 10);
-          existingAdmin.role = 'ADMIN';
-          existingAdmin.is_active = true;
-          (existingAdmin as any).active = true;
-          await repo.save(existingAdmin);
+      if (!admin) {
+        admin = userRepo.create({
+          username: 'admin',
+          name: 'System Admin',
+          full_name: 'System Admin',
+          role: 'ADMIN',
+          shift: 'PRVA',
+          is_active: true,
+          active: true,
+          email: 'admin@altawms.local',
+          password_hash: await bcrypt.hash('Dekodera1989@', 10),
+        } as any);
+      } else {
+        admin.role = 'ADMIN';
+        admin.is_active = true;
+        (admin as any).active = true;
+        if (!admin.password_hash) {
+          admin.password_hash = await bcrypt.hash('Dekodera1989@', 10);
         }
-        return;
       }
-      const admin = repo.create({
-        username: 'admin',
-        name: 'System Admin',
-        full_name: 'System Admin',
-        role: 'ADMIN',
-        shift: 'PRVA',
-        is_active: true,
-        active: true,
-        email: 'admin@altawms.local',
-        password_hash: await bcrypt.hash('Dekodera1989@', 10),
-      } as any);
-      await repo.save(admin);
+      await userRepo.save(admin);
+      await ensureUserRole(admin, adminRole);
     };
     await ensureAdmin();
   } catch (e) {

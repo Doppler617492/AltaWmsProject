@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, Up
 import { ReceivingDocument } from './receiving-document.entity';
 import { ReceivingPhoto } from './receiving-photo.entity';
 import { Store } from './store.entity';
+import { UserRole } from './user-role.entity';
 
 @Entity('users')
 export class User {
@@ -64,4 +65,7 @@ export class User {
 
   @OneToMany(() => ReceivingPhoto, photo => photo.uploader)
   receivingPhotos: ReceivingPhoto[];
+
+  @OneToMany(() => UserRole, userRole => userRole.user)
+  userRoles: UserRole[];
 }
