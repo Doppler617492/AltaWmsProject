@@ -22,9 +22,9 @@ __pycache__/
 *.pytest_cache/
 
 # Docker
+.dockerignore
 docker-compose.override.yml
 docker-compose.prod.yml.local
-.dockerignore
 
 # Environment variables
 .env
