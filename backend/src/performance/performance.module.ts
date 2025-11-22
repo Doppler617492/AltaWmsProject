@@ -13,9 +13,11 @@ import { InventoryMovement } from '../entities/inventory-movement.entity';
 import { Team } from '../entities/team.entity';
 import { TeamMember } from '../entities/team-member.entity';
 import { TaskAssignmentInfo } from '../entities/task-assignment-info.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
+    AuthModule,
     TypeOrmModule.forFeature([
       User,
       TaskAssignee,

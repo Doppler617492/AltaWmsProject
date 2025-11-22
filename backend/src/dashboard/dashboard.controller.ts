@@ -9,7 +9,9 @@ export class DashboardController {
 
   private ensureRole(role: string) {
     const allowed = ['admin','menadzer','sef_magacina'];
-    if (!allowed.includes(role)) throw new ForbiddenException('Zabranjen pristup');
+    const normalized = (role || '').toLowerCase();
+    const allowedSet = allowed.map(r => r.toLowerCase());
+    if (!allowedSet.includes(normalized)) throw new ForbiddenException('Zabranjen pristup');
   }
 
   @Get('overview')
@@ -31,4 +33,3 @@ export class DashboardController {
     return this.svc.clearLiveEvents();
   }
 }
-

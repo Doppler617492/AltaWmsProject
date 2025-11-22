@@ -2,6 +2,7 @@ import { OnModuleInit } from '@nestjs/common';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { PerformanceService } from './performance.service';
+import { AuthService } from '../auth/auth.service';
 
 // Path set to /socket.io to align with Nginx upgrade route
 @WebSocketGateway({ namespace: '/ws/performance', cors: { origin: '*' }, path: '/socket.io' })
@@ -9,17 +10,34 @@ export class PerformanceGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly perf: PerformanceService) {}
+  constructor(private readonly perf: PerformanceService, private readonly authService: AuthService) {}
 
   onModuleInit() {
-    this.server.use((socket, next) => {
+    this.server.use(async (socket, next) => {
       const headerToken = (socket.handshake.headers['x-kiosk-token'] as string) || '';
       const queryToken = (socket.handshake.query['kioskToken'] as string) || '';
-    const expected = process.env.TV_KIOSK_TOKEN || '';
-    if (expected && headerToken !== expected && queryToken !== expected) {
-        return next(new Error('Unauthorized'));
+      const bearer = (socket.handshake.headers['authorization'] as string) || '';
+      const bearerToken = bearer.startsWith('Bearer ') ? bearer.slice(7).trim() : '';
+      const provided = headerToken || queryToken || bearerToken || '';
+      const expected = process.env.TV_KIOSK_TOKEN || '';
+
+      // Allow if kiosk token matches or no kiosk token is configured
+      if (!expected || provided === expected) {
+        return next();
       }
-      next();
+
+      // Fallback: allow valid JWT (e.g. admin UI)
+      if (provided && provided.split('.').length === 3) {
+        try {
+          const user = await this.authService.validateToken(provided);
+          (socket.data as any).user = user;
+          return next();
+        } catch (e) {
+          return next(new Error('Unauthorized'));
+        }
+      }
+
+      return next(new Error('Unauthorized'));
     });
 
     // Push current snapshot on connection

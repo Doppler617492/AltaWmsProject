@@ -26,7 +26,9 @@ export class CycleCountService {
   ) {}
 
   private ensureRole(role: string, allowed: string[]) {
-    if (!allowed.includes(role)) throw new ForbiddenException('Zabranjen pristup');
+    const normalized = (role || '').toLowerCase();
+    const allowedSet = allowed.map(r => r.toLowerCase());
+    if (!allowedSet.includes(normalized)) throw new ForbiddenException('Zabranjen pristup');
   }
 
   async createTask(actor: { id: number; role: string }, body: { scope: 'LOKACIJA'|'ZONA'; target_code: string; assign_to_user_id?: number }) {

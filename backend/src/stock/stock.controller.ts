@@ -10,7 +10,9 @@ export class StockController {
 
   // FAZA 5.1 — RBAC helpers
   private ensureRole(role: string, allowed: string[]) {
-    if (!allowed.includes(role)) throw new ForbiddenException('Zabranjen pristup');
+    const normalized = (role || '').toLowerCase();
+    const allowedSet = allowed.map(r => r.toLowerCase());
+    if (!allowedSet.includes(normalized)) throw new ForbiddenException('Zabranjen pristup');
   }
 
   // 1) Pregled po artiklu
