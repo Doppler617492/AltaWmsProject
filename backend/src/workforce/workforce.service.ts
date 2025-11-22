@@ -52,7 +52,8 @@ export class WorkforceService {
   ) {}
 
   private ensureSupervisor(role: string) {
-    if (!['admin', 'sef_magacina', 'menadzer', 'sef', 'logistika'].includes(role)) {
+    const normalizedRole = (role || '').toLowerCase();
+    if (!['admin', 'sef_magacina', 'menadzer', 'sef', 'logistika'].includes(normalizedRole)) {
       throw new ForbiddenException('Pristup dozvoljen samo admin/šef magacina/menadžer/šef/logistika.');
     }
   }
