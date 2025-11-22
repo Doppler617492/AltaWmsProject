@@ -99,7 +99,7 @@ export async function seedDatabase(dataSource: DataSource) {
     }
 
     const ensureAdmin = async () => {
-      let admin = await userRepo.findOne({
+      let admin: User | null = await userRepo.findOne({
         where: [
           { role: 'ADMIN' as any },
           { role: 'admin' as any },
