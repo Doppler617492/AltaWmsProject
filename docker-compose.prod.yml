@@ -82,6 +82,7 @@ services:
       NEXT_PUBLIC_WS_URL: "/socket.io"
       NEXT_PUBLIC_WS_PATH: "/socket.io"
       NEXT_PUBLIC_WS_BASE: "https://admin.cungu.com"
+      NEXT_PUBLIC_JWT_SECRET: ${JWT_SECRET}
       NEXT_PUBLIC_TV_KIOSK_TOKEN: ${TV_KIOSK_TOKEN}
       NODE_ENV: production
     ports:

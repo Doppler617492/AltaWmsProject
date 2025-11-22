@@ -37,6 +37,7 @@ export const SidebarNav: React.FC = () => {
   const router = useRouter();
   const path = router.pathname;
   const [userRole, setUserRole] = React.useState<string | null>(null);
+  const normalize = (r: string | null | undefined) => (r || '').toLowerCase();
 
   React.useEffect(() => {
     // Get user role from token
@@ -44,7 +45,10 @@ export const SidebarNav: React.FC = () => {
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserRole(payload.role);
+        const role = normalize(payload.role);
+        const rolesArr: string[] = Array.isArray(payload.roles) ? payload.roles : [];
+        const primary = role || normalize(rolesArr[0]);
+        setUserRole(primary);
       } catch {}
     }
   }, []);
@@ -57,7 +61,7 @@ export const SidebarNav: React.FC = () => {
     if (item.href === '/labeling') return false;
     if (!item.roles) return true; // No role restriction
     if (!userRole) return false;
-    return item.roles.includes(userRole);
+    return item.roles.map(normalize).includes(normalize(userRole));
   });
 
   const accent = '#fcd34d';
