@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           debug: true
-          script_stop: true
+          script_stop: false
           script: |
             set -euxo pipefail
 
