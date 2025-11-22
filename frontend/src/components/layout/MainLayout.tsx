@@ -94,7 +94,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         }
         const base =
           process.env.NEXT_PUBLIC_BACKEND_URL ||
-          `${window.location.protocol}//${window.location.hostname}:8000`;
+          `${window.location.origin}`;
         let token =
           process.env.NEXT_PUBLIC_TV_KIOSK_TOKEN ||
           (window as any).__TV_KIOSK_TOKEN ||
@@ -520,5 +520,4 @@ const wsBannerStyle = {
   alignItems: "center",
   gap: 6,
 };
-
 

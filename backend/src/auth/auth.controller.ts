@@ -22,9 +22,16 @@ export class AuthController {
   async getProfile(@Request() req) {
     // Load full user from DB to include last_activity
     const dbUser = await this.userRepo.findOne({ where: { id: req.user.id }, relations: ['store'] });
+    const base = {
+      id: req.user.id,
+      username: req.user.username,
+      role: req.user.role,
+      roles: req.user.roles || [],
+      permissions: req.user.permissions || [],
+    };
     if (dbUser) {
       return {
-        ...req.user,
+        ...base,
         full_name: (dbUser as any).full_name || dbUser.name || req.user.name,
         name: (dbUser as any).full_name || dbUser.name || req.user.name,
         last_activity: dbUser.last_activity || null,
@@ -33,6 +40,6 @@ export class AuthController {
         store_code: dbUser.store?.code || null,
       };
     }
-    return req.user;
+    return base;
   }
 }

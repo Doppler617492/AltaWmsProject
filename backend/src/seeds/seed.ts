@@ -69,6 +69,7 @@ export async function seedDatabase(dataSource: DataSource) {
       'dashboard:view',
       'workforce:read',
       'stock:read',
+      'stock:hotspots',
       'performance:read',
       'receiving:read',
       'shipping:read',
@@ -80,6 +81,14 @@ export async function seedDatabase(dataSource: DataSource) {
       'cyclecount:read',
       'users:read',
       'users:write',
+      'teams:read',
+      'teams:write',
+      'povracaj:read',
+      'skart:read',
+      'warehouse:read',
+      'relayout:read',
+      'orchestration:read',
+      'pwa:read',
     ];
     const perms = [];
     for (const p of permissionNames) {
