@@ -3,7 +3,9 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1 \
     npm_config_fetch_retries=5 \
     npm_config_fetch_retry_mintimeout=20000 \
-    npm_config_fetch_retry_maxtimeout=120000
+    npm_config_fetch_retry_maxtimeout=120000 \
+    NEXT_BINARY_HOST_MIRROR=https://unpkg.com \
+    NEXT_SWC_CACHE_DIR=/tmp/next-swc-cache
 COPY package*.json ./
 RUN npm install
 
