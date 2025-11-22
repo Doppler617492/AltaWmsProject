@@ -33,6 +33,7 @@ services:
       DB_NAME: wms
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-3d}
+      CORS_ORIGIN: https://admin.cungu.com
       PORT: 8000
       NODE_ENV: production
       ANALYTICS_API_KEY: ${ANALYTICS_API_KEY:-}
@@ -41,7 +42,7 @@ services:
       TV_KIOSK_TOKEN: ${TV_KIOSK_TOKEN}
       PERFORMANCE_REFRESH_INTERVAL: ${PERFORMANCE_REFRESH_INTERVAL:-30}
     ports:
-      - "127.0.0.1:8000:8000"
+      - "8000:8000"
     depends_on:
       migration-runner:
         condition: service_completed_successfully
