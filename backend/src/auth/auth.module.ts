@@ -18,7 +18,7 @@ import { RolesGuard, ReceivingRolesGuard } from './roles.guard';
         }
         return secret;
       })(),
-      signOptions: { expiresIn: '24h' },
+      signOptions: { expiresIn: '8h' },
     }),
   ],
   controllers: [AuthController],

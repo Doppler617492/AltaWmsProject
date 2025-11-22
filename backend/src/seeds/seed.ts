@@ -18,26 +18,43 @@ export async function seedDatabase(dataSource: DataSource) {
   const userRepo = dataSource.getRepository(User);
   const storeRepo = dataSource.getRepository(Store);
 
-  // Always ensure demo users exist
+  // Always ensure base admin exists
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const bcrypt = require('bcryptjs');
-    const ensure = async (u: Partial<User> & { username: string; password?: string }) => {
+    const ensureAdmin = async () => {
       const repo = dataSource.getRepository(User);
-      let row = await repo.findOne({ where: { username: u.username } });
-      if (!row) row = repo.create({ username: u.username } as Partial<User>);
-      row.full_name = (u as any).full_name || (u as any).name || u.username;
-      row.name = row.full_name;
-      row.role = (u as any).role || 'admin';
-      (row as any).shift = (u as any).shift || 'PRVA';
-      row.is_active = true; (row as any).active = true;
-      row.email = `${u.username}@altawms.local`;
-      if ((u as any).password) {
-        (row as any).password_hash = await bcrypt.hash((u as any).password, 10);
+      const existingAdmin = await repo.findOne({
+        where: [
+          { role: 'ADMIN' as any },
+          { role: 'admin' as any },
+          { username: 'admin' },
+        ],
+      });
+      if (existingAdmin) {
+        if (!existingAdmin.password_hash) {
+          existingAdmin.password_hash = await bcrypt.hash('Dekodera1989@', 10);
+          existingAdmin.role = 'ADMIN';
+          existingAdmin.is_active = true;
+          (existingAdmin as any).active = true;
+          await repo.save(existingAdmin);
+        }
+        return;
       }
-      await repo.save(row);
+      const admin = repo.create({
+        username: 'admin',
+        name: 'System Admin',
+        full_name: 'System Admin',
+        role: 'ADMIN',
+        shift: 'PRVA',
+        is_active: true,
+        active: true,
+        email: 'admin@altawms.local',
+        password_hash: await bcrypt.hash('Dekodera1989@', 10),
+      } as any);
+      await repo.save(admin);
     };
-    await ensure({ username: 'admin', full_name: 'System Admin', role: 'admin', shift: 'PRVA', password: 'admin' });
+    await ensureAdmin();
   } catch (e) {
     console.log('Seed users skipped:', (e)?.message || e);
   }
