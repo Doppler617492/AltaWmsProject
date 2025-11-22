@@ -15,6 +15,11 @@ export class JwtAuthGuard implements CanActivate {
     
     try {
       const user = await this.authService.validateToken(token);
+      const roles = Array.isArray(user?.roles) ? user.roles : [];
+      const hasAdmin = roles.some((r: string) => (r || '').toLowerCase() === 'admin');
+      if (hasAdmin) {
+        user.role = 'admin';
+      }
       request.user = user;
       return true;
     } catch {
