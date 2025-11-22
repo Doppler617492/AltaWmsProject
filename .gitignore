@@ -23,7 +23,6 @@ __pycache__/
 
 # Docker
 docker-compose.override.yml
-docker-compose.*.yml
 docker-compose.prod.yml.local
 .dockerignore
 
@@ -50,8 +49,8 @@ cache/
 *.vcxproj
 .vscode/
 .idea/
-*.swp
-*.swo
+*.swp/
+*.swo/
 *~
 
 # Coverage & test results
