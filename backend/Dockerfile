@@ -14,8 +14,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev
-COPY --from=build /app/.next ./.next
-COPY --from=build /app/public ./public
-COPY --from=build /app/next.config.js ./next.config.js || true
-EXPOSE 8090
-CMD ["npm", "run", "start"]
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/scripts ./scripts
+# Optional runtime envs
+ENV ANALYTICS_API_KEY=""
+ENV ANALYTICS_PUSH_URL=""
+EXPOSE 8000
+CMD ["npm", "run", "start:prod"]
+
