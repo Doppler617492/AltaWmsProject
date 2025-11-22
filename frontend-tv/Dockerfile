@@ -1,5 +1,9 @@
 FROM node:18-bullseye-slim AS deps
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    npm_config_fetch_retries=5 \
+    npm_config_fetch_retry_mintimeout=20000 \
+    npm_config_fetch_retry_maxtimeout=120000
 COPY package*.json ./
 RUN npm install
 
@@ -7,6 +11,7 @@ FROM node:18-bullseye-slim AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN npm cache clean --force
 RUN npm run build
 
 FROM node:18-bullseye-slim AS runner
