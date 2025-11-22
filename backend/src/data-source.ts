@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
+import { join } from 'path';
 import { Supplier } from './entities/supplier.entity';
 import { Item } from './entities/item.entity';
 import { StockLocation } from './entities/stock-location.entity';
@@ -43,11 +44,11 @@ import { UserRole } from './entities/user-role.entity';
 
 const AppDataSource = new DataSource({
   type: 'postgres',
-  host: process.env.DB_HOST || undefined,
+  host: process.env.DB_HOST,
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined,
-  username: process.env.DB_USER || undefined,
-  password: process.env.DB_PASS || undefined,
-  database: process.env.DB_NAME || undefined,
+  username: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
   url: process.env.DB_URL || undefined,
   entities: [
     Supplier,
@@ -90,9 +91,11 @@ const AppDataSource = new DataSource({
     Permission,
     RolePermission,
     UserRole,
+    join(__dirname, '**/*.entity.js'),
   ],
-  migrations: ['dist/migrations/*.js'],
+  migrations: [join(__dirname, 'migrations/*.js')],
   synchronize: false,
+  migrationsRun: false,
   logging: false,
 });
 

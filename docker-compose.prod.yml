@@ -26,7 +26,11 @@ services:
       dockerfile: docker/Dockerfile.backend
     container_name: alta-wms-backend-prod
     environment:
-      DB_URL: postgresql://wms_user:${DB_PASSWORD}@db:5432/wms
+      DB_HOST: alta-wms-db-prod
+      DB_PORT: 5432
+      DB_USER: wms_user
+      DB_PASS: ${DB_PASSWORD}
+      DB_NAME: wms
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-3d}
       PORT: 8000
@@ -55,7 +59,11 @@ services:
       dockerfile: docker/Dockerfile.backend
     container_name: alta-wms-migration-runner
     environment:
-      DB_URL: postgresql://wms_user:${DB_PASSWORD}@db:5432/wms
+      DB_HOST: alta-wms-db-prod
+      DB_PORT: 5432
+      DB_USER: wms_user
+      DB_PASS: ${DB_PASSWORD}
+      DB_NAME: wms
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: production
       NPM_CONFIG_PRODUCTION: "false"

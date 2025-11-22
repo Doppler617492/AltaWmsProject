@@ -25,9 +25,9 @@ mirrorDirs.forEach((dir) => {
 
 const stub = [
   "const { DataSource } = require('typeorm');",
-  "const compiled = require('./src/data-source.js');",
-  "const entities = (compiled.default && compiled.default.options?.entities) || (compiled.AppDataSource && compiled.AppDataSource.options?.entities) || [];",
-  "const migrations = (compiled.default && compiled.default.options?.migrations) || (compiled.AppDataSource && compiled.AppDataSource.options?.migrations) || ['dist/migrations/*.js'];",
+  "const path = require('path');",
+  "const entitiesGlob = path.join(__dirname, '**/*.entity.js');",
+  "const migrationsGlob = path.join(__dirname, 'migrations/*.js');",
   "const cfg = {",
   "  type: 'postgres',",
   "  host: process.env.DB_HOST,",
@@ -36,9 +36,10 @@ const stub = [
   "  password: process.env.DB_PASS,",
   "  database: process.env.DB_NAME,",
   "  url: process.env.DB_URL || undefined,",
-  "  entities,",
-  "  migrations,",
+  "  entities: [entitiesGlob],",
+  "  migrations: [migrationsGlob],",
   "  synchronize: false,",
+  "  migrationsRun: false,",
   "  logging: false,",
   "};",
   "const ds = new DataSource(cfg);",
@@ -50,4 +51,3 @@ const stub = [
 
 fs.writeFileSync(targetPath, stub);
 console.log('[postbuild] Wrote dist/data-source.js stub.');
-

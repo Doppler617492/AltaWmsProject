@@ -77,6 +77,7 @@ import { Permission } from './entities/permission.entity';
 import { RolePermission } from './entities/role-permission.entity';
 import { UserRole } from './entities/user-role.entity';
 import { EventsModule } from './events/events.module';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -85,8 +86,16 @@ import { EventsModule } from './events/events.module';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DB_URL || 'postgresql://wms_user:wms_password@localhost:5432/wms',
-      entities: [Supplier, Item, StockLocation, Zone, Aisle, Rack, Location, LocationStatus, User, ReceivingDocument, ReceivingItem, ReceivingPhoto, InventoryMovement, Inventory, UserShift, CycleCountTask, CycleCountLine, PutawayTask, ShippingOrder, ShippingOrderLine, ShippingLoadPhoto, ExceptionAckLog, OrchestrationActionLog, SlaEvent, SlaComplianceCache, LocationLabel, PrintJob, Store, Team, TeamMember, TaskAssignee, TaskAssignmentInfo, SkartDocument, SkartItem, SkartPhoto, AuditLog, PantheonItem, PovracajDocument, PovracajItem, PovracajPhoto, Role, Permission, RolePermission, UserRole],
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined,
+      username: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      database: process.env.DB_NAME,
+      url: process.env.DB_URL || undefined,
+      entities: [
+        Supplier, Item, StockLocation, Zone, Aisle, Rack, Location, LocationStatus, User, ReceivingDocument, ReceivingItem, ReceivingPhoto, InventoryMovement, Inventory, UserShift, CycleCountTask, CycleCountLine, PutawayTask, ShippingOrder, ShippingOrderLine, ShippingLoadPhoto, ExceptionAckLog, OrchestrationActionLog, SlaEvent, SlaComplianceCache, LocationLabel, PrintJob, Store, Team, TeamMember, TaskAssignee, TaskAssignmentInfo, SkartDocument, SkartItem, SkartPhoto, AuditLog, PantheonItem, PovracajDocument, PovracajItem, PovracajPhoto, Role, Permission, RolePermission, UserRole,
+        join(__dirname, '**/*.entity.js'),
+      ],
       synchronize: false,
       logging: false,
     }),
