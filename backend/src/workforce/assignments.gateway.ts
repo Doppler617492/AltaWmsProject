@@ -1,7 +1,8 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 
-@WebSocketGateway({ namespace: '/ws/assignments', cors: { origin: '*'} })
+// Explicit path keeps socket.io reachable through reverse proxy at /socket.io
+@WebSocketGateway({ namespace: '/ws/assignments', cors: { origin: '*'}, path: '/socket.io' })
 export class AssignmentsGateway {
   @WebSocketServer()
   server: Server;
@@ -47,4 +48,3 @@ export class AssignmentsGateway {
     } catch {}
   }
 }
-

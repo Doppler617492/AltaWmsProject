@@ -3,7 +3,8 @@ import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { PerformanceService } from './performance.service';
 
-@WebSocketGateway({ namespace: '/ws/performance', cors: { origin: '*' } })
+// Path set to /socket.io to align with Nginx upgrade route
+@WebSocketGateway({ namespace: '/ws/performance', cors: { origin: '*' }, path: '/socket.io' })
 export class PerformanceGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
@@ -32,4 +33,3 @@ export class PerformanceGateway implements OnModuleInit {
     });
   }
 }
-
