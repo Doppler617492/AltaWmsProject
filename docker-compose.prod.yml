@@ -59,13 +59,14 @@ services:
       DB_URL: postgresql://wms_user:${DB_PASSWORD}@db:5432/wms
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: production
+      NPM_CONFIG_PRODUCTION: "false"
     depends_on:
       db:
         condition: service_healthy
     networks:
       - alta-wms-network
     command: >
-      sh -c "npm ci &&
+      sh -c "npm ci --include=dev &&
              npm run build &&
              npm run typeorm migration:run &&
              echo 'MIGRATIONS APPLIED'"
