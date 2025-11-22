@@ -17,7 +17,8 @@ export class SlaController {
     @Query('zone') zone?: string,
   ) {
     const allowed = ['admin', 'menadzer', 'sef_magacina', 'logistika'];
-    if (!allowed.includes(req.user.role)) {
+    const normalizedRole = (req.user?.role || '').toLowerCase();
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
 
@@ -32,14 +33,14 @@ export class SlaController {
 
   @Get('stats')
   async getStats(@Req() req: any, @Query('worker_id') workerId?: string) {
-    const role = req.user.role;
+    const role = (req.user?.role || '').toLowerCase();
 
     // Magacioner can only see their own stats
     if (role === 'magacioner') {
       return this.slaService.getStats({
         worker_id: req.user.id,
       });
-    } else if (!['admin', 'menadzer', 'sef_magacina', 'logistika'].includes(role)) {
+    } else if (!['admin', 'menadzer', 'sef_magacina', 'logistika'].map(r => r.toLowerCase()).includes(role)) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
 
@@ -51,7 +52,8 @@ export class SlaController {
   @Get('trends')
   async getTrends(@Req() req: any, @Query('period') period?: string) {
     const allowed = ['admin', 'menadzer', 'sef_magacina', 'logistika'];
-    if (!allowed.includes(req.user.role)) {
+    const normalizedRole = (req.user?.role || '').toLowerCase();
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
 
@@ -65,7 +67,8 @@ export class SlaController {
     @Req() req: any,
   ) {
     const allowed = ['admin', 'menadzer', 'sef_magacina'];
-    if (!allowed.includes(req.user.role)) {
+    const normalizedRole = (req.user?.role || '').toLowerCase();
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Nemate dozvolu za dodavanje komentara');
     }
 

@@ -10,7 +10,8 @@ export class RelayoutController {
   @Get('pressure-map')
   async getPressureMap(@Req() req: any): Promise<PressureMapItem[]> {
     const allowed = ['admin', 'menadzer', 'sef_magacina'];
-    if (!allowed.includes(req.user.role)) {
+    const normalizedRole = (req.user?.role || '').toLowerCase();
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
 
@@ -20,7 +21,8 @@ export class RelayoutController {
   @Get('recommendations')
   async getRecommendations(@Req() req: any): Promise<RelayoutRecommendation[]> {
     const allowed = ['admin', 'menadzer', 'sef_magacina'];
-    if (!allowed.includes(req.user.role)) {
+    const normalizedRole = (req.user?.role || '').toLowerCase();
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
 

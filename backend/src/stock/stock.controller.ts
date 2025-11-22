@@ -58,7 +58,8 @@ export class StockController {
   async getByDocument(@Param('id') id: string, @Req() req: any) {
     const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
     const allowed = ['admin', 'menadzer', 'sef', 'sef_magacina', 'magacioner'];
-    if (!allowed.includes(role)) {
+    const normalizedRole = role.toLowerCase();
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Pristup dozvoljen samo za admin/menadžer/šef/magacioner');
     }
     return this.stockService.getInventoryByDocument(parseInt(id));

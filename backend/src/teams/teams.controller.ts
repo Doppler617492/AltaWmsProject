@@ -9,7 +9,8 @@ export class TeamsController {
   constructor(private readonly service: TeamsService) {}
 
   private ensureSupervisor(role: string) {
-    if (!['admin','sef_magacina','menadzer'].includes(role)) {
+    const normalizedRole = (role || '').toLowerCase();
+    if (!['admin','sef_magacina','menadzer'].includes(normalizedRole)) {
       throw new BadRequestException('Samo admin/šef/menadžer');
     }
   }

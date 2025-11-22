@@ -14,7 +14,8 @@ export class UsersService {
   ) {}
 
   private ensureAdmin(role: string) {
-    if (!['admin', 'sef_magacina', 'sef'].includes(role)) {
+    const normalizedRole = (role || '').toLowerCase();
+    if (!['admin', 'sef_magacina', 'sef'].includes(normalizedRole)) {
       throw new ForbiddenException('Samo admin i šef magacina imaju pristup.');
     }
   }

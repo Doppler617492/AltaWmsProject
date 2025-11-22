@@ -10,7 +10,8 @@ export class KpiController {
   @Get('overview')
   async overview(@Req() req: any) {
     const allowed = ['admin', 'menadzer', 'sef_magacina', 'komercijalista', 'logistika'];
-    if (!allowed.includes(req.user.role)) {
+    const normalizedRole = (req.user?.role || '').toLowerCase();
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
     return this.kpiService.getOverview();
@@ -19,7 +20,8 @@ export class KpiController {
   @Get('workers')
   async workers(@Req() req: any) {
     const allowed = ['admin', 'menadzer', 'sef_magacina'];
-    if (!allowed.includes(req.user.role)) {
+    const normalizedRole = (req.user?.role || '').toLowerCase();
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
     return this.kpiService.getWorkers();
@@ -28,12 +30,13 @@ export class KpiController {
   @Get('workers/:userId')
   async workerDetail(@Param('userId') userId: string, @Req() req: any) {
     const id = Number(userId);
+    const normalizedRole = (req.user?.role || '').toLowerCase();
     // Allow workers to see only their own data
-    if (req.user.role === 'magacioner' && req.user.id !== id) {
+    if (normalizedRole === 'magacioner' && req.user.id !== id) {
       throw new ForbiddenException('Nemate dozvolu za pregled podataka drugog radnika');
     }
     const allowed = ['admin', 'menadzer', 'sef_magacina', 'magacioner'];
-    if (!allowed.includes(req.user.role)) {
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
     return this.kpiService.getWorkerById(id);
@@ -42,7 +45,8 @@ export class KpiController {
   @Get('warehouse-heatmap')
   async warehouseHeatmap(@Req() req: any) {
     const allowed = ['admin', 'menadzer', 'sef_magacina'];
-    if (!allowed.includes(req.user.role)) {
+    const normalizedRole = (req.user?.role || '').toLowerCase();
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
     return this.kpiService.getWarehouseHeatmap();
@@ -51,7 +55,8 @@ export class KpiController {
   @Get('timeline')
   async timeline(@Req() req: any) {
     const allowed = ['admin', 'menadzer', 'sef_magacina', 'komercijalista', 'logistika'];
-    if (!allowed.includes(req.user.role)) {
+    const normalizedRole = (req.user?.role || '').toLowerCase();
+    if (!allowed.map(r => r.toLowerCase()).includes(normalizedRole)) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
     return this.kpiService.getTimeline();
