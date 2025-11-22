@@ -11,7 +11,7 @@ FROM node:18-bullseye-slim AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm cache clean --force
+RUN rm -rf /root/.cache/next-swc || true && npm cache clean --force
 RUN npm run build
 
 FROM node:18-bullseye-slim AS runner
