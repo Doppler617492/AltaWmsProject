@@ -508,7 +508,7 @@ export default function ReceivingDocuments() {
       const formData = new FormData();
       formData.append('file', importData.excelFile);
       formData.append('preview','true');
-      const response = await fetch(`${backendBase}/receiving/import?preview=true`, {
+      const response = await fetch(`/api/fresh/receiving/import`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,

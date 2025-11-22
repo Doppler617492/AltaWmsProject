@@ -37,9 +37,8 @@ export async function importFromExcel(file: File, customerName: string) {
   formData.append('file', file);
   formData.append('customer_name', customerName);
   
-  // For file uploads, bypass the proxy and send directly to backend
   const token = localStorage.getItem('token');
-  const response = await fetch('http://localhost:8000/shipping/import', {
+  const response = await fetch('/api/fresh/shipping/import', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -62,7 +61,7 @@ export async function importFromExcelPreview(file: File, customerName: string) {
   formData.append('preview', 'true');
 
   const token = localStorage.getItem('token');
-  const response = await fetch('http://localhost:8000/shipping/import?preview=true', {
+  const response = await fetch('/api/fresh/shipping/import', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
