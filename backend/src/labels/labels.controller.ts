@@ -16,7 +16,7 @@ export class LabelsController {
     @Req() req?: any,
   ) {
     const allowed = ['admin', 'menadzer', 'sef_magacina'];
-    if (!allowed.includes(req.user.role)) {
+    if (!allowed.includes(req.user.role?.toLowerCase())) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
 
@@ -35,7 +35,7 @@ export class LabelsController {
     @Req() req: any,
   ) {
     const allowed = ['admin', 'sef_magacina'];
-    if (!allowed.includes(req.user.role)) {
+    if (!allowed.includes(req.user.role?.toLowerCase())) {
       throw new ForbiddenException('Nemate dozvolu za štampu');
     }
 
@@ -57,7 +57,7 @@ export class LabelsController {
   @Delete('location/:locationCode')
   async deleteLocationLabel(@Param('locationCode') locationCode: string, @Req() req: any) {
     const allowed = ['admin','sef_magacina'];
-    if (!allowed.includes(req.user.role)) {
+    if (!allowed.includes(req.user.role?.toLowerCase())) {
       throw new ForbiddenException('Nemate dozvolu za brisanje etikete');
     }
     return this.labelsService.deleteLocationLabel(locationCode);
