@@ -7,10 +7,12 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard, ReceivingRolesGuard } from './roles.guard';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Permission]),
+    PermissionsModule,
     JwtModule.register({
       secret: (() => {
         const secret = process.env.JWT_SECRET || 'samo-za-dev';
