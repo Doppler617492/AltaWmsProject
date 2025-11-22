@@ -73,7 +73,7 @@ export class ReceivingController {
   @Get('active/dashboard')
   async getDashboard(@Req() req: any) {
     // RBAC via guard ensures admin/menadzer/sef/magacioner allowed; enforce supervisor here
-    const role = req.user?.role;
+    const role = req.user?.role?.toLowerCase();
     if (!['admin','menadzer','sef','sef_magacina'].includes(role)) {
       const { ForbiddenException } = await import('@nestjs/common');
       throw new ForbiddenException('Pristup ograničen na admin/menadžer/šef.');
@@ -89,7 +89,7 @@ export class ReceivingController {
   @Get('items/:id/recommend-location')
   async recommendLocation(@Param('id') id: string, @Req() req: any) {
     const allowed = ['admin', 'menadzer', 'sef_magacina', 'magacioner'];
-    if (!allowed.includes(req.user.role)) {
+    if (!allowed.includes(req.user.role?.toLowerCase())) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
     return this.receivingService.recommendLocation(parseInt(id), req.user.id, req.user.role);

@@ -10,7 +10,7 @@ export class ExceptionsController {
   @Get('active')
   async getActive(@Req() req: any) {
     const allowed = ['admin', 'menadzer', 'sef_magacina', 'logistika'];
-    if (!allowed.includes(req.user.role)) {
+    if (!allowed.includes(req.user.role?.toLowerCase())) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
     return this.exceptionsService.getActiveExceptions();
@@ -23,7 +23,7 @@ export class ExceptionsController {
     @Req() req: any,
   ) {
     const allowed = ['admin', 'menadzer', 'sef_magacina', 'logistika'];
-    if (!allowed.includes(req.user.role)) {
+    if (!allowed.includes(req.user.role?.toLowerCase())) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
     if (!body.target_user_id && !body.team_id) {
@@ -35,7 +35,7 @@ export class ExceptionsController {
   @Patch(':id/unhold')
   async unhold(@Param('id') id: string, @Req() req: any) {
     const allowed = ['admin', 'menadzer', 'sef_magacina', 'logistika'];
-    if (!allowed.includes(req.user.role)) {
+    if (!allowed.includes(req.user.role?.toLowerCase())) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
     return this.exceptionsService.unholdException(id);
@@ -44,7 +44,7 @@ export class ExceptionsController {
   @Patch(':id/ack')
   async acknowledge(@Param('id') id: string, @Req() req: any) {
     const allowed = ['admin', 'menadzer', 'sef_magacina', 'logistika'];
-    if (!allowed.includes(req.user.role)) {
+    if (!allowed.includes(req.user.role?.toLowerCase())) {
       throw new ForbiddenException('Nemate dozvolu za pristup');
     }
     return this.exceptionsService.acknowledgeException(id, req.user.id, req.user.role);

@@ -11,7 +11,7 @@ export class ReceivingUsersController {
   // Intended for admin/menadzer/sef to assign/reassign work
   @Get('warehouse-workers')
   async getWarehouseWorkers(@Req() req: any) {
-    const role = req.user?.role;
+    const role = req.user?.role?.toLowerCase();
     const allowed = ['admin', 'menadzer', 'sef', 'sef_magacina'];
     if (!allowed.includes(role)) {
       throw new ForbiddenException('Pristup dozvoljen samo za admin/menadžer/šef.');
