@@ -13,8 +13,6 @@ FROM node:18-bullseye-slim AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN rm -rf /root/.cache/next-swc || true && npm cache clean --force \
-  && npm install @next/swc-linux-x64-gnu@14.0.0
 RUN npm run build
 
 FROM node:18-bullseye-slim AS runner
