@@ -20,7 +20,11 @@ interface AuthPayloadUser {
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService, @InjectRepository(User) private readonly userRepo: Repository<User>) {}
+  constructor(
+    private jwtService: JwtService,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
+    @InjectRepository(Permission) private readonly permRepo: Repository<Permission>,
+  ) {}
 
   async validateUser(username: string, password: string): Promise<any> {
     const dbUser = await this.userRepo.findOne({
@@ -46,7 +50,10 @@ export class AuthService {
 
     const fullName = (dbUser as any).full_name || (dbUser as any).name || dbUser.username;
     const roles = this.extractRoles(dbUser);
-    const permissions = this.extractPermissions(dbUser);
+    let permissions = this.extractPermissions(dbUser);
+    if (roles.includes('ADMIN')) {
+      permissions = await this.allPermissions();
+    }
     const roleNormalized = (roles[0] || dbUser.role || 'admin').toUpperCase();
     const payload: AuthPayloadUser = {
       id: dbUser.id,
@@ -83,7 +90,10 @@ export class AuthService {
       const isActive = (dbUser.active ?? dbUser.is_active) !== false;
       if (!isActive) throw new UnauthorizedException('Nalog je deaktiviran');
       const roles = this.extractRoles(dbUser);
-      const permissions = this.extractPermissions(dbUser);
+      let permissions = this.extractPermissions(dbUser);
+      if (roles.includes('ADMIN')) {
+        permissions = await this.allPermissions();
+      }
       return {
         id: dbUser.id,
         username: dbUser.username,
@@ -144,5 +154,14 @@ export class AuthService {
       }
     }
     return Array.from(new Set(perms));
+  }
+
+  private async allPermissions(): Promise<string[]> {
+    try {
+      const perms = await this.permRepo.find();
+      return perms.map(p => p.name);
+    } catch {
+      return [];
+    }
   }
 }
