@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchOverview } from '../../lib/api';
-import { perfSocket } from '../../lib/socket';
+import { fetchOverview } from '../../src/lib/api';
+import { perfSocket } from '../../src/lib/socket';
 
 type Split = { box_assigned:number; box_completed:number; items_assigned:number; items_completed:number };
 type Worker = { name:string; team:string; shift?: string|null; receiving: Split; shipping: Split };
