@@ -80,6 +80,7 @@ services:
     container_name: alta-wms-frontend-admin-prod
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_WS_URL: "/socket.io"
       NEXT_PUBLIC_TV_KIOSK_TOKEN: ${TV_KIOSK_TOKEN}
       NODE_ENV: production
     ports:

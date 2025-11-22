@@ -92,9 +92,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           window.setTimeout(connect, 1200);
           return;
         }
+        // WebSocket host and path (prod: https://admin.cungu.com/socket.io/, dev fallback: http://localhost:8000/socket.io)
         const base =
+          process.env.NEXT_PUBLIC_WS_BASE ||
           process.env.NEXT_PUBLIC_BACKEND_URL ||
-          `${window.location.origin}`;
+          `${window.location.origin}` ||
+          'http://localhost:8000';
+        const wsPath = process.env.NEXT_PUBLIC_WS_URL || '/socket.io';
         let token =
           process.env.NEXT_PUBLIC_TV_KIOSK_TOKEN ||
           (window as any).__TV_KIOSK_TOKEN ||
@@ -107,8 +111,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         }
         if (!token) token = "change_me_strong_token";
 
-        socket = io(`${base}/ws/performance`, {
+        socket = io(`${base.replace(/\/$/, "")}/ws/performance`, {
           transports: ["websocket"],
+          path: wsPath,
           query: { kioskToken: token },
           reconnection: true,
           reconnectionDelayMax: 5000,
@@ -219,8 +224,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         // Connect to assignments WebSocket for task completion notifications
         let assignmentsSocket: any = null;
         try {
-          assignmentsSocket = io(`${base}/ws/assignments`, {
+          assignmentsSocket = io(`${base.replace(/\/$/, "")}/ws/assignments`, {
             transports: ["websocket"],
+            path: wsPath,
           });
 
           assignmentsSocket.on("task:completed", (payload: any) => {
@@ -520,4 +526,3 @@ const wsBannerStyle = {
   alignItems: "center",
   gap: 6,
 };
-

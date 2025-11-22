@@ -2,6 +2,27 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as express from 'express';
 import { join } from 'path';
+import { IoAdapter } from '@nestjs/platform-socket.io';
+
+class SocketIoAdapter extends IoAdapter {
+  constructor(app: any, private readonly allowedOrigins: string[]) {
+    super(app);
+  }
+
+  createIOServer(port: number, options?: any) {
+    const opts = {
+      ...(options || {}),
+      path: '/socket.io',
+      cors: {
+        origin: this.allowedOrigins,
+        methods: ['GET', 'POST'],
+        credentials: true,
+      },
+    };
+    const server = super.createIOServer(port, opts);
+    return server;
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,7 +39,9 @@ async function bootstrap() {
         'http://frontend:3000',
         'http://localhost:8080', // PWA frontend
         'http://localhost:8090', // TV wallboard
-        'http://zebra:8080'       // Future Zebra handheld in Docker
+        'http://zebra:8080',       // Future Zebra handheld in Docker
+        'https://admin.cungu.com',
+        'https://api.cungu.com',
       ];
   
   app.enableCors({
@@ -42,6 +65,8 @@ async function bootstrap() {
   app.use('/uploads', express.static(uploadsPath));
   
   const port = process.env.PORT || 8000;
+  // Ensure Socket.IO uses the same HTTP server and path /socket.io
+  app.useWebSocketAdapter(new SocketIoAdapter(app, allowedOrigins));
   await app.listen(port as number, '0.0.0.0');
   
   console.log(`🚀 Alta WMS Backend listening on port ${port}`);
