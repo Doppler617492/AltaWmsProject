@@ -92,13 +92,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           window.setTimeout(connect, 1200);
           return;
         }
-        // WebSocket host and path (prod: https://admin.cungu.com/socket.io/, dev fallback: http://localhost:8000/socket.io)
+        // WebSocket host and path (prod: https://admin.cungu.com/socket.io/, dev fallback via envs)
         const base =
           process.env.NEXT_PUBLIC_WS_BASE ||
-          process.env.NEXT_PUBLIC_BACKEND_URL ||
           `${window.location.origin}` ||
           'http://localhost:8000';
-        const wsPath = process.env.NEXT_PUBLIC_WS_URL || '/socket.io';
+        const wsPath =
+          process.env.NEXT_PUBLIC_WS_URL ||
+          process.env.NEXT_PUBLIC_WS_PATH ||
+          '/socket.io';
         let token =
           process.env.NEXT_PUBLIC_TV_KIOSK_TOKEN ||
           (window as any).__TV_KIOSK_TOKEN ||
@@ -111,7 +113,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         }
         if (!token) token = "change_me_strong_token";
 
-        socket = io(`${base.replace(/\/$/, "")}/ws/performance`, {
+        const perfNs = `${base.replace(/\/$/, "")}/ws/performance`;
+        socket = io(perfNs, {
           transports: ["websocket"],
           path: wsPath,
           query: { kioskToken: token },
@@ -224,7 +227,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         // Connect to assignments WebSocket for task completion notifications
         let assignmentsSocket: any = null;
         try {
-          assignmentsSocket = io(`${base.replace(/\/$/, "")}/ws/assignments`, {
+          const assignNs = `${base.replace(/\/$/, "")}/ws/assignments`;
+          assignmentsSocket = io(assignNs, {
             transports: ["websocket"],
             path: wsPath,
           });

@@ -47,7 +47,7 @@ export class AuthService {
     const fullName = (dbUser as any).full_name || (dbUser as any).name || dbUser.username;
     const roles = this.extractRoles(dbUser);
     const permissions = this.extractPermissions(dbUser);
-    const roleNormalized = (roles[0] || dbUser.role || 'admin').toLowerCase();
+    const roleNormalized = (roles[0] || dbUser.role || 'admin').toUpperCase();
     const payload: AuthPayloadUser = {
       id: dbUser.id,
       username: dbUser.username,
@@ -87,7 +87,7 @@ export class AuthService {
       return {
         id: dbUser.id,
         username: dbUser.username,
-        role: (roles[0] || dbUser.role || 'admin').toLowerCase(),
+        role: (roles[0] || dbUser.role || 'admin').toUpperCase(),
         roles,
         permissions,
         name: (dbUser as any).full_name || (dbUser as any).name,
@@ -104,10 +104,10 @@ export class AuthService {
     const payload = {
       sub: user.id,
       username: user.username,
-      role: (user.role || '').toLowerCase(),
+      role: (user.role || '').toUpperCase(),
       fullName: user.fullName || user.username,
       storeId: user.storeId ?? null,
-      roles: (user.roles || []).map(r => (r || '').toLowerCase()),
+      roles: (user.roles || []).map(r => (r || '').toUpperCase()),
       permissions: user.permissions || [],
     };
     return this.jwtService.sign(payload);
@@ -127,7 +127,7 @@ export class AuthService {
         if (r?.name) list.push(r.name);
       }
     }
-    return Array.from(new Set(list.map(r => (r || '').toLowerCase())));
+    return Array.from(new Set(list.map(r => (r || '').toUpperCase())));
   }
 
   private extractPermissions(user: User): string[] {

@@ -111,7 +111,7 @@ export async function seedDatabase(dataSource: DataSource) {
           username: 'admin',
           name: 'System Admin',
           full_name: 'System Admin',
-          role: 'admin',
+          role: 'ADMIN',
           shift: 'PRVA',
           is_active: true,
           active: true,
@@ -119,7 +119,7 @@ export async function seedDatabase(dataSource: DataSource) {
           password_hash: await bcrypt.hash('Dekodera1989@', 10),
         } as Partial<User>) as User;
       } else {
-        admin.role = 'admin';
+        admin.role = 'ADMIN';
         admin.is_active = true;
         (admin as any).active = true;
         if (!admin.password_hash) {

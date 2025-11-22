@@ -76,6 +76,7 @@ import { Role } from './entities/role.entity';
 import { Permission } from './entities/permission.entity';
 import { RolePermission } from './entities/role-permission.entity';
 import { UserRole } from './entities/user-role.entity';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -119,6 +120,7 @@ import { UserRole } from './entities/user-role.entity';
     CunguModule,
     SkartModule,
     PovracajModule,
+    EventsModule,
   ],
   controllers: [PwaController],
   providers: [DatabaseService],
