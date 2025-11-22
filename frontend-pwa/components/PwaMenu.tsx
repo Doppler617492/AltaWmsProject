@@ -160,7 +160,7 @@ export default function PwaMenu() {
   };
 
   const tileCount = isStoreManager ? 2 : 4;
-  const gridColumns = tileCount === 1 ? 'repeat(1, 1fr)' : 'repeat(2, 1fr)';
+  const gridColumns = tileCount === 2 ? 'repeat(1, 1fr)' : 'repeat(2, 1fr)';
 
   return (
     <div style={{ padding: '16px', background: 'linear-gradient(180deg, #05070d 0%, #020304 100%)', minHeight: '100vh' }}>
