@@ -123,6 +123,9 @@ services:
     build:
       context: ./frontend-tv
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_TV_KIOSK_TOKEN: ${TV_KIOSK_TOKEN}
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_API_URL}
     container_name: alta-wms-frontend-tv-prod
     environment:
       NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_API_URL}
