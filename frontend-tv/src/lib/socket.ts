@@ -5,9 +5,9 @@ import { io } from 'socket.io-client';
 const base = 'https://admin.cungu.com';
 const token = process.env.NEXT_PUBLIC_TV_KIOSK_TOKEN || '';
 
-export const perfSocket = io(base, {
+// Connect to the /ws/performance namespace at the /socket.io path
+export const perfSocket = io(`${base}/ws/performance`, {
   path: '/socket.io',
-  namespace: '/ws/performance',
   transports: ['websocket', 'polling'],
   extraHeaders: { 'x-kiosk-token': token },
   query: { kioskToken: token }
