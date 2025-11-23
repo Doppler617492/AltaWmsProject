@@ -1,7 +1,7 @@
 import { WebSocketGateway, WebSocketServer, OnGatewayInit } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 
-@WebSocketGateway({ namespace: '/ws/events', cors: { origin: true, credentials: true } })
+@WebSocketGateway({ namespace: '/ws/events' })
 export class EventsGateway implements OnGatewayInit {
   @WebSocketServer()
   server: Server;

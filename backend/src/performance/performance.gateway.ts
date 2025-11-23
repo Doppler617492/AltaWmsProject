@@ -5,7 +5,7 @@ import { PerformanceService } from './performance.service';
 import { AuthService } from '../auth/auth.service';
 
 // Namespace /ws/performance for performance socket events
-@WebSocketGateway({ namespace: '/ws/performance', cors: { origin: true, credentials: true } })
+@WebSocketGateway({ namespace: '/ws/performance' })
 export class PerformanceGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;

@@ -9,9 +9,7 @@ import { Injectable } from '@nestjs/common';
  */
 @Injectable()
 @WebSocketGateway({ 
-  namespace: '/', 
-  cors: { origin: true, credentials: true },
-  transports: ['websocket', 'polling']
+  namespace: '/'
 })
 export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
