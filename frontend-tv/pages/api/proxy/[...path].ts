@@ -20,7 +20,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const segs = (req.query.path as string[] || []).filter(Boolean);
   const relPath = segs.join('/');
-  const token = process.env.NEXT_PUBLIC_TV_KIOSK_TOKEN || process.env.TV_KIOSK_TOKEN || '';
+  // Get token from env or from query parameter passed by client
+  let token = process.env.NEXT_PUBLIC_TV_KIOSK_TOKEN || process.env.TV_KIOSK_TOKEN || '';
+  // If no token in env, try to get from query params (client might pass it)
+  if (!token && typeof req.query.kioskToken === 'string') {
+    token = req.query.kioskToken;
+  }
   const headers: Record<string,string> = { 'x-kiosk-token': token };
   const ct = req.headers['content-type'];
   if (typeof ct === 'string') headers['content-type'] = ct;
