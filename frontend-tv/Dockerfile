@@ -1,13 +1,11 @@
 FROM node:18-bullseye-slim AS builder
 WORKDIR /app
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    NODE_ENV=production
 COPY package*.json ./
 RUN npm install --frozen-lockfile
-
 COPY . .
-# Run build with curl available for debugging
-RUN npm run build || (echo "Build failed, checking .next structure" && ls -la .next 2>/dev/null || echo "No .next dir")
+RUN npm run build
 
 FROM node:18-bullseye-slim AS runner
 WORKDIR /app
