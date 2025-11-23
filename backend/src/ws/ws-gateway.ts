@@ -10,7 +10,6 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 @WebSocketGateway({ 
   namespace: '/', 
-  path: '/socket.io', 
   cors: { origin: true, credentials: true },
   transports: ['websocket', 'polling']
 })
