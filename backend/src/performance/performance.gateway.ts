@@ -4,8 +4,8 @@ import { Server } from 'socket.io';
 import { PerformanceService } from './performance.service';
 import { AuthService } from '../auth/auth.service';
 
-// Path set to /socket.io to align with Nginx upgrade route
-@WebSocketGateway({ namespace: '/ws/performance', cors: { origin: '*' }, path: '/socket.io' })
+// Namespace /ws/performance for performance socket events
+@WebSocketGateway({ namespace: '/ws/performance', cors: { origin: true, credentials: true } })
 export class PerformanceGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;

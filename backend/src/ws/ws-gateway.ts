@@ -8,7 +8,12 @@ import { Injectable } from '@nestjs/common';
  * Handles general Socket.IO connections and authentication
  */
 @Injectable()
-@WebSocketGateway({ namespace: '/', path: '/socket.io', cors: { origin: true, credentials: true } })
+@WebSocketGateway({ 
+  namespace: '/', 
+  path: '/socket.io', 
+  cors: { origin: true, credentials: true },
+  transports: ['websocket', 'polling']
+})
 export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
