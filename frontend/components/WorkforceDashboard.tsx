@@ -369,7 +369,8 @@ function WorkerCard({ w, me, onRefresh }: { w: Worker; me: any; onRefresh: () =>
   const bg = w.online_status === 'ONLINE'
     ? 'linear-gradient(180deg,#151922,#090b14)'
     : 'rgba(255,255,255,0.04)';
-  const canAssignShift = me && ['admin','sef_magacina','menadzer'].includes(me.role);
+  const normalizedRole = (me?.role || '').toLowerCase();
+  const canAssignShift = me && ['admin','sef_magacina','menadzer'].includes(normalizedRole);
   const canAssignTask = me && me.role && w.online_status !== 'NEAKTIVAN' && w.shift_type !== 'OFF';
 
   return (
