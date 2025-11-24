@@ -44,13 +44,14 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     return <div style={styles.loading}>Loading user data...</div>;
   }
 
-  const showUsersTab = user && ['admin','sef_magacina','sef'].includes(user.role);
-  const showControlTab = user && ['admin','menadzer','sef_magacina'].includes(user.role);
-  const showStockTab = user && ['admin','menadzer','sef_magacina','sef_prodavnice'].includes(user.role);
-  const showWorkforceTab = user && ['admin','sef_magacina'].includes(user.role);
-  const showMapTab = user && ['admin','menadzer','sef','sef_magacina','magacioner'].includes(user.role);
-  const showLabelingTab = user && ['admin','sef_magacina'].includes(user.role);
-  const showSkartTab = user && ['admin','menadzer','sef','sef_magacina','sef_prodavnice','manager'].includes(user.role);
+  const userRole = (user.role || '').toLowerCase();
+  const showUsersTab = user && ['admin','sef_magacina','sef'].includes(userRole);
+  const showControlTab = user && ['admin','menadzer','sef_magacina'].includes(userRole);
+  const showStockTab = user && ['admin','menadzer','sef_magacina','sef_prodavnice'].includes(userRole);
+  const showWorkforceTab = user && ['admin','sef_magacina'].includes(userRole);
+  const showMapTab = user && ['admin','menadzer','sef','sef_magacina','magacioner'].includes(userRole);
+  const showLabelingTab = user && ['admin','sef_magacina'].includes(userRole);
+  const showSkartTab = user && ['admin','menadzer','sef','sef_magacina','sef_prodavnice','manager'].includes(userRole);
   const UsersLazy = dynamic(() => import('./Users'), { ssr: false });
   const ControlTowerLazy = dynamic(() => import('./ControlTowerDashboard'), { ssr: false });
   const StockDashboardLazy = dynamic(() => import('./StockDashboard'), { ssr: false });

@@ -24,10 +24,11 @@ export default function SkartDashboard({ user }: SkartDashboardProps) {
   const [modalState, setModalState] = useState<{ mode: 'view' | 'create'; document?: any } | null>(null);
   const [anomalies, setAnomalies] = useState<any[]>([]);
 
-  const canCreate = ['admin', 'store', 'prodavnica', 'menadzer', 'sef', 'sef_magacina', 'sef_prodavnice'].includes(user?.role);
-  const canReceive = ['admin', 'magacioner', 'warehouse', 'sef', 'menadzer', 'sef_magacina'].includes(user?.role);
-  const canDelete = ['admin', 'menadzer', 'sef', 'sef_magacina'].includes(user?.role);
-  const canAssign = ['admin', 'menadzer', 'sef', 'sef_magacina'].includes(user?.role);
+  const userRole = (user?.role || '').toLowerCase();
+  const canCreate = ['admin', 'store', 'prodavnica', 'menadzer', 'sef', 'sef_magacina', 'sef_prodavnice'].includes(userRole);
+  const canReceive = ['admin', 'magacioner', 'warehouse', 'sef', 'menadzer', 'sef_magacina'].includes(userRole);
+  const canDelete = ['admin', 'menadzer', 'sef', 'sef_magacina'].includes(userRole);
+  const canAssign = ['admin', 'menadzer', 'sef', 'sef_magacina'].includes(userRole);
 
   useEffect(() => {
     refreshData();
