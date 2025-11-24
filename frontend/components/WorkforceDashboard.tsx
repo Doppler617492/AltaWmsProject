@@ -272,7 +272,7 @@ export default function WorkforceDashboard() {
             letterSpacing: 1
           }}
         >
-          Magacioneri
+          Magacioneri ({data.length - filtered.length})
         </button>
         <button
           onClick={() => setViewMode('teams')}
@@ -290,8 +290,11 @@ export default function WorkforceDashboard() {
             letterSpacing: 1
           }}
         >
-          Timovi
+          Timovi ({filtered.length})
         </button>
+        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, alignSelf: 'center' }}>
+          Debug: Teams loaded: {teams.length}, Mode: {viewMode}
+        </div>
       </div>
 
       {/* Timovi Section - Only show when in teams view */}
