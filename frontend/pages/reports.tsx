@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MainLayout } from '../src/components/layout/MainLayout';
 import { useRouter } from 'next/router';
-import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import { apiClient } from '../lib/apiClient';
 
 interface TaskRecord {
   id: number;
@@ -118,20 +117,18 @@ const ReportsPage: React.FC = () => {
   // Fetch users and teams for dropdowns
   useEffect(() => {
     if (!hasAccess) return;
-    const token = localStorage.getItem('token');
     
-    axios.get(`${API_BASE_URL}/users`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then(res => setUsersList(res.data || [])).catch(() => {});
+    apiClient.get('/users')
+      .then(data => setUsersList(Array.isArray(data) ? data : []))
+      .catch(() => {});
 
-    axios.get(`${API_BASE_URL}/teams`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then(res => setTeamsList(res.data || [])).catch(() => {});
+    apiClient.get('/teams')
+      .then(data => setTeamsList(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, [hasAccess]);
 
   const fetchData = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       if (activeTab === 'tasks') {
         const params: any = { from: dateFrom, to: dateTo };
@@ -141,23 +138,17 @@ const ReportsPage: React.FC = () => {
         if (skuFilter) params.sku = skuFilter;
         if (locationFilter) params.location = locationFilter;
 
-        const res = await axios.get(`${API_BASE_URL}/reports/task-history`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params,
-        });
-        setTasks(res.data);
+        const query = new URLSearchParams(params).toString();
+        const data = await apiClient.get(`/reports/task-history?${query}`);
+        setTasks(data);
       } else if (activeTab === 'workers') {
-        const res = await axios.get(`${API_BASE_URL}/reports/workers-summary`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { from: dateFrom, to: dateTo },
-        });
-        setWorkers(res.data);
+        const query = new URLSearchParams({ from: dateFrom, to: dateTo }).toString();
+        const data = await apiClient.get(`/reports/workers-summary?${query}`);
+        setWorkers(data);
       } else if (activeTab === 'teams') {
-        const res = await axios.get(`${API_BASE_URL}/reports/teams-summary`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { from: dateFrom, to: dateTo },
-        });
-        setTeams(res.data);
+        const query = new URLSearchParams({ from: dateFrom, to: dateTo }).toString();
+        const data = await apiClient.get(`/reports/teams-summary?${query}`);
+        setTeams(data);
       }
     } catch (err) {
       console.error('Error fetching reports:', err);
@@ -177,12 +168,14 @@ const ReportsPage: React.FC = () => {
   const handleExportExcel = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports/export-excel`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { from: dateFrom, to: dateTo },
-        responseType: 'blob',
+      const query = new URLSearchParams({ from: dateFrom, to: dateTo }).toString();
+      const res = await fetch(`/api/proxy/reports/export-excel?${query}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
-      const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
