@@ -14,12 +14,14 @@ import { IconSla } from "../icons/IconSla";
 import { IconMap } from "../icons/IconMap";
 import { IconSkart } from "../icons/IconSkart";
 import { IconPovracaj } from "../icons/IconPovracaj";
+import { IconReports } from "../icons/IconReports";
 
 const navItems = [
   { label: "Kontrolna tabla", icon: IconDashboard, href: "/dashboard", roles: ['admin', 'menadzer', 'sef', 'magacioner', 'komercialista', 'komercijalista'] },
   { label: "KPI tabla", icon: IconKpi, href: "/kpi", roles: ['admin', 'menadzer', 'sef'] },
   { label: "Komandni centar", icon: IconCommandCenter, href: "/command-center", roles: ['admin', 'menadzer', 'sef', 'logistika'] },
   { label: "SLA usklađenost", icon: IconSla, href: "/sla", roles: ['admin', 'menadzer', 'sef'] },
+  { label: "Izveštaji", icon: IconReports, href: "/reports", roles: ['admin', 'menadzer', 'sef'] },
   { label: "Radna snaga", icon: IconWorkforce, href: "/workforce", roles: ['admin', 'menadzer', 'sef'] },
   { label: "Prijem", icon: IconInbound, href: "/receiving", roles: ['admin', 'menadzer', 'sef', 'magacioner', 'logistika'] },
   { label: "Otprema", icon: IconOutbound, href: "/shipping", roles: ['admin', 'menadzer', 'sef', 'magacioner', 'komercialista', 'komercijalista'] },
