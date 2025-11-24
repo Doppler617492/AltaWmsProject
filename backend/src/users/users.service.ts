@@ -123,7 +123,8 @@ export class UsersService {
   }
 
   async remove(actorRole: string, actorId: number, id: number) {
-    if (actorRole !== 'admin') {
+    const normalizedRole = (actorRole || '').toLowerCase();
+    if (normalizedRole !== 'admin') {
       throw new ForbiddenException('Brisanje korisnika dozvoljeno je samo administratoru.');
     }
     const user = await this.userRepo.findOne({ where: { id } });
