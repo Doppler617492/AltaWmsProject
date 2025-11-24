@@ -203,25 +203,26 @@ export default function WorkforceDashboard() {
     }
     
     // Filter by view mode (teams vs individuals)
-    const teamMemberIds = new Set(
-      teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
+    // Individual workers are in teams with only 1 member
+    // Team workers are in teams with 2 members
+    const individualWorkerIds = new Set(
+      teams
+        .filter(team => (team.members || []).length === 1)
+        .flatMap(team => (team.members || []).map((m: any) => m.user_id))
     );
     
-    // Debug logging
-    if (teams.length > 0) {
-      console.log('Teams:', teams);
-      console.log('First team members:', teams[0]?.members);
-      console.log('Team member IDs extracted:', Array.from(teamMemberIds));
-      console.log('Total workers:', data.length);
-      console.log('Worker IDs:', data.map(w => w.user_id));
-    }
+    const teamWorkerIds = new Set(
+      teams
+        .filter(team => (team.members || []).length === 2)
+        .flatMap(team => (team.members || []).map((m: any) => m.user_id))
+    );
     
     if (viewMode === 'individuals') {
-      // Show only workers who are NOT part of any team
-      result = result.filter(w => !teamMemberIds.has(w.user_id));
+      // Show only workers in single-member teams
+      result = result.filter(w => individualWorkerIds.has(w.user_id));
     } else {
-      // Show only workers who ARE part of a team
-      result = result.filter(w => teamMemberIds.has(w.user_id));
+      // Show only workers in 2-member teams
+      result = result.filter(w => teamWorkerIds.has(w.user_id));
     }
     
     return result;
@@ -319,9 +320,9 @@ export default function WorkforceDashboard() {
             <button style={btn} onClick={downloadTeamsCSV}>CSV</button>
           </div>
         </div>
-        {teams.length === 0 ? <div style={{ color: colors.textPrimary }}>Nema kreiranih timova.</div> : (
+        {teams.filter(t => (t.members || []).length === 2).length === 0 ? <div style={{ color: colors.textPrimary }}>Nema kreiranih timova sa 2 člana.</div> : (
           <div style={{ ...grid }}>
-            {teams.map((tm:any)=> {
+            {teams.filter(tm => (tm.members || []).length === 2).map((tm:any)=> {
               const metric = teamsRank.find((x:any)=> (x.team_name||x.team) === tm.name);
               const memberNames = (tm.members||[]).map((m:any)=>{
                 const u = data.find(x=> x.user_id===m.user_id);
