@@ -931,7 +931,8 @@ export class WorkforceService {
   }
 
   async assignShift(actor: { id: number; role: string }, body: { user_id: number; shift_type: string }) {
-    if (!['admin', 'sef_magacina', 'menadzer'].includes(actor.role)) {
+    const normalizedRole = (actor.role || '').toLowerCase();
+    if (!['admin', 'sef_magacina', 'menadzer'].includes(normalizedRole)) {
       throw new ForbiddenException('Samo admin/šef magacina/menadžer može menjati smene.');
     }
     if (!body || !body.user_id || !['PRVA','DRUGA','OFF'].includes(body.shift_type)) {
