@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import MainLayout from '../src/components/layout/MainLayout';
+import { MainLayout } from '../src/components/layout/MainLayout';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
