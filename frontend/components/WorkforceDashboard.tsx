@@ -207,6 +207,15 @@ export default function WorkforceDashboard() {
       teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
     );
     
+    // Debug logging
+    if (teams.length > 0) {
+      console.log('Teams:', teams);
+      console.log('First team members:', teams[0]?.members);
+      console.log('Team member IDs extracted:', Array.from(teamMemberIds));
+      console.log('Total workers:', data.length);
+      console.log('Worker IDs:', data.map(w => w.user_id));
+    }
+    
     if (viewMode === 'individuals') {
       // Show only workers who are NOT part of any team
       result = result.filter(w => !teamMemberIds.has(w.user_id));
@@ -272,7 +281,7 @@ export default function WorkforceDashboard() {
             letterSpacing: 1
           }}
         >
-          Magacioneri ({data.length - filtered.length})
+          Magacioneri
         </button>
         <button
           onClick={() => setViewMode('teams')}
@@ -290,11 +299,8 @@ export default function WorkforceDashboard() {
             letterSpacing: 1
           }}
         >
-          Timovi ({filtered.length})
+          Timovi
         </button>
-        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, alignSelf: 'center' }}>
-          Debug: Teams loaded: {teams.length}, Mode: {viewMode}
-        </div>
       </div>
 
       {/* Timovi Section - Only show when in teams view */}
