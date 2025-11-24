@@ -198,12 +198,20 @@ export default function WorkforceDashboard() {
       teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
     );
     
+    // Debug logging
+    console.log('Teams:', teams.length, 'teams loaded');
+    console.log('Team member IDs:', Array.from(teamMemberIds));
+    console.log('All workers:', data.length, 'total workers');
+    console.log('View mode:', viewMode);
+    
     if (viewMode === 'individuals') {
       // Show only workers who are NOT part of any team
       result = result.filter(w => !teamMemberIds.has(w.user_id));
+      console.log('Individuals:', result.length, 'workers');
     } else {
       // Show only workers who ARE part of a team
       result = result.filter(w => teamMemberIds.has(w.user_id));
+      console.log('Team members:', result.length, 'workers');
     }
     
     return result;
