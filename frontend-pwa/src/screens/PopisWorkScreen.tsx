@@ -6,7 +6,7 @@ export default function PopisWorkScreen({ taskId }: { taskId: number }){
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  const apiBase = (process.env.NEXT_PUBLIC_API_URL as string) || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8000` : 'http://localhost:8000');
+  const apiBase = typeof window !== 'undefined' ? `${window.location.origin}/api/fresh` : 'http://localhost:8000';
   const token = typeof window !== 'undefined' ? localStorage.getItem('token')||'' : '';
   const auth = { Authorization: `Bearer ${token}`, 'Content-Type':'application/json' } as any;
 

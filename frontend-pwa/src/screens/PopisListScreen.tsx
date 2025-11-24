@@ -7,7 +7,7 @@ export default function PopisListScreen(){
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const apiBase = (process.env.NEXT_PUBLIC_API_URL as string) || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8000` : 'http://localhost:8000');
+  const apiBase = typeof window !== 'undefined' ? `${window.location.origin}/api/fresh` : 'http://localhost:8000';
   const load = async ()=>{
     setLoading(true);
     try {

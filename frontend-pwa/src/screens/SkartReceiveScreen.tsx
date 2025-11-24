@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import PwaHeader from '../../components/PwaHeader';
 import PwaBackButton from '../../components/PwaBackButton';
-import { getSkartDocumentByUid, receiveSkartDocument, uploadSkartDocumentPhoto } from '../lib/apiClient';
+import { getMe, getSkartDocumentByUid, receiveSkartDocument, uploadSkartDocumentPhoto } from '../lib/apiClient';
 
 interface ReceiveItem {
   code: string;
@@ -35,16 +35,12 @@ export default function SkartReceiveScreen({ uid }: { uid: string }) {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/'); return; }
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + '/auth/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then(async (res) => {
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/');
-        return;
-      }
-      const json = await res.json();
-      setMe(json);
+    getMe().then((user) => {
+      setMe(user);
+    }).catch((err) => {
+      console.error('Failed to fetch user:', err);
+      localStorage.removeItem('token');
+      router.push('/');
     });
   }, [router]);
 
