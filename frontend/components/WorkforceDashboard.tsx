@@ -72,7 +72,18 @@ export default function WorkforceDashboard() {
     return () => clearInterval(t);
   }, []);
 
-  useEffect(()=>{ (async()=>{ try{ const t = await apiClient.get('/teams'); setTeams(Array.isArray(t)?t:[]);} catch{} })(); }, []);
+  useEffect(()=>{ 
+    (async()=>{ 
+      try{ 
+        const t = await apiClient.get('/teams'); 
+        console.log('Teams loaded:', t);
+        setTeams(Array.isArray(t)?t:[]); 
+      } catch(err) { 
+        console.error('Failed to load teams:', err);
+        setTeams([]);
+      } 
+    })(); 
+  }, []);
   const loadTeamsRank = async () => {
     try {
       const qs = (teamFrom || teamTo) ? `?from=${teamFrom||''}&to=${teamTo||''}` : '';
@@ -198,20 +209,19 @@ export default function WorkforceDashboard() {
       teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
     );
     
-    // Debug logging
-    console.log('Teams:', teams.length, 'teams loaded');
+    console.log('Filtering - View mode:', viewMode);
+    console.log('Teams:', teams.length);
     console.log('Team member IDs:', Array.from(teamMemberIds));
-    console.log('All workers:', data.length, 'total workers');
-    console.log('View mode:', viewMode);
+    console.log('Total workers:', data.length);
     
     if (viewMode === 'individuals') {
       // Show only workers who are NOT part of any team
       result = result.filter(w => !teamMemberIds.has(w.user_id));
-      console.log('Individuals:', result.length, 'workers');
+      console.log('Filtered individuals:', result.length);
     } else {
       // Show only workers who ARE part of a team
       result = result.filter(w => teamMemberIds.has(w.user_id));
-      console.log('Team members:', result.length, 'workers');
+      console.log('Filtered team members:', result.length);
     }
     
     return result;
