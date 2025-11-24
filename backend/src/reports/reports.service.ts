@@ -233,9 +233,17 @@ export class ReportsService {
     }
 
     // Get Shipping tasks
+    const shippingDateFilter: any = {};
+    if (filters.from || filters.to) {
+      const start = filters.from ? new Date(filters.from) : new Date('2020-01-01');
+      const end = filters.to ? new Date(filters.to) : new Date();
+      // For shipping, filter by completion date, not creation date
+      shippingDateFilter.completed_at = Between(start, end);
+    }
+
     const shippingOrders = await this.shippingOrderRepo.find({
       where: {
-        ...dateFilter,
+        ...shippingDateFilter,
         status: In(['COMPLETED', 'CLOSED']),
         ...(filters.workerId && { assigned_user_id: filters.workerId }),
       },
