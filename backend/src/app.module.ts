@@ -78,6 +78,7 @@ import { RolePermission } from './entities/role-permission.entity';
 import { UserRole } from './entities/user-role.entity';
 import { EventsModule } from './events/events.module';
 import { WsModule } from './ws/ws.module';
+import { ReportsModule } from './reports/reports.module';
 import { join } from 'path';
 
 @Module({
@@ -132,6 +133,7 @@ import { join } from 'path';
     PovracajModule,
     EventsModule,
     WsModule,
+    ReportsModule,
   ],
   controllers: [PwaController],
   providers: [DatabaseService],
