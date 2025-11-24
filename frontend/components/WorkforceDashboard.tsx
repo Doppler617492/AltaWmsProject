@@ -48,6 +48,7 @@ export default function WorkforceDashboard() {
   const [teamTasksData, setTeamTasksData] = useState<any | null>(null);
   const [teamTasksLoading, setTeamTasksLoading] = useState<boolean>(false);
   const [teamTasksError, setTeamTasksError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'individuals' | 'teams'>('individuals');
 
   const load = async () => {
     try {
@@ -185,9 +186,30 @@ export default function WorkforceDashboard() {
   };
 
   const filtered = useMemo(() => {
-    if (filter === 'SVE') return data;
-    return data.filter(w => (w.shift_type || 'NEDODELJEN') === filter);
-  }, [data, filter]);
+    let result = data;
+    
+    // Filter by shift
+    if (filter !== 'SVE') {
+      result = result.filter(w => (w.shift_type || 'NEDODELJEN') === filter);
+    }
+    
+    // Filter by view mode (teams vs individuals)
+    if (viewMode === 'teams') {
+      // Show only workers who are part of a team
+      const teamMemberIds = new Set(
+        teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
+      );
+      result = result.filter(w => teamMemberIds.has(w.user_id));
+    } else {
+      // Show only workers who are NOT part of any team
+      const teamMemberIds = new Set(
+        teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
+      );
+      result = result.filter(w => !teamMemberIds.has(w.user_id));
+    }
+    
+    return result;
+  }, [data, filter, viewMode, teams]);
 
   const onlineWorkers = data.filter(w => w.online_status === 'ONLINE').length;
 
@@ -225,7 +247,48 @@ export default function WorkforceDashboard() {
         <AssignPovracajLauncher onAssigned={load} />
       </div>
 
-      {/* Timovi */}
+      {/* Tab Navigation */}
+      <div style={{ display: 'flex', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 8 }}>
+        <button
+          onClick={() => setViewMode('individuals')}
+          style={{
+            background: viewMode === 'individuals' ? 'linear-gradient(135deg,#FFD700,#FFA500)' : 'transparent',
+            color: viewMode === 'individuals' ? '#000' : 'rgba(255,255,255,0.6)',
+            border: 'none',
+            padding: '10px 24px',
+            borderRadius: 12,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            textTransform: 'uppercase',
+            letterSpacing: 1
+          }}
+        >
+          Magacioneri
+        </button>
+        <button
+          onClick={() => setViewMode('teams')}
+          style={{
+            background: viewMode === 'teams' ? 'linear-gradient(135deg,#FFD700,#FFA500)' : 'transparent',
+            color: viewMode === 'teams' ? '#000' : 'rgba(255,255,255,0.6)',
+            border: 'none',
+            padding: '10px 24px',
+            borderRadius: 12,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            textTransform: 'uppercase',
+            letterSpacing: 1
+          }}
+        >
+          Timovi
+        </button>
+      </div>
+
+      {/* Timovi Section - Only show when in teams view */}
+      {viewMode === 'teams' && (
       <div style={{ background: 'linear-gradient(180deg,#111522,#090b14)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 24, padding: 20, boxShadow:'0 18px 35px rgba(0,0,0,0.45)', display:'flex', flexDirection:'column', gap:16 }}>
         <div style={{ display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:12, alignItems:'center' }}>
           <div>
@@ -349,6 +412,7 @@ export default function WorkforceDashboard() {
           />
         )}
       </div>
+      )}
 
       {loading ? <div style={{ color: colors.textPrimary, padding: '1rem' }}>Učitavanje…</div> : error ? <div style={{ color: colors.statusErr, padding: '1rem' }}>{error}</div> : (
         <div style={{ ...grid }}>
