@@ -203,7 +203,7 @@ export default function WorkforceDashboard() {
     }
     
     // Filter by view mode (teams vs individuals)
-    // Individual workers are in teams with only 1 member
+    // Individual workers are in teams with only 1 member OR not in any team
     // Team workers are in teams with 2 members
     const individualWorkerIds = new Set(
       teams
@@ -217,9 +217,14 @@ export default function WorkforceDashboard() {
         .flatMap(team => (team.members || []).map((m: any) => m.user_id))
     );
     
+    // Workers not in any team should also be individuals
+    const allTeamMemberIds = new Set(
+      teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
+    );
+    
     if (viewMode === 'individuals') {
-      // Show only workers in single-member teams
-      result = result.filter(w => individualWorkerIds.has(w.user_id));
+      // Show workers in single-member teams OR not in any team at all
+      result = result.filter(w => !teamWorkerIds.has(w.user_id));
     } else {
       // Show only workers in 2-member teams
       result = result.filter(w => teamWorkerIds.has(w.user_id));
