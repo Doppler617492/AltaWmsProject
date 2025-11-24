@@ -538,11 +538,11 @@ const ReportsPage: React.FC = () => {
               background: 'rgba(15,23,42,0.75)',
               border: '1px solid rgba(148,163,184,0.25)',
               borderRadius: 16,
-              padding: 20,
+              padding: 24,
               marginBottom: 24,
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: '16px',
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: '20px',
             }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: colors.brandYellow, marginBottom: '6px' }}>
