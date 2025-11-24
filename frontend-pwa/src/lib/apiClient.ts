@@ -2,6 +2,10 @@ import { apiClient as base } from '../../lib/apiClient';
 
 export const apiClient = base;
 
+export async function getMe() {
+  return base.get('/auth/me');
+}
+
 export async function getMyActiveReceivings() {
   return base.get('/receiving/my-active');
 }

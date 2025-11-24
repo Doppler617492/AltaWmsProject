@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import PwaHeader from '../../components/PwaHeader';
 import PwaBackButton from '../../components/PwaBackButton';
-import { createPovracajDocument, searchItems } from '../lib/apiClient';
+import { createPovracajDocument, searchItems, getMe } from '../lib/apiClient';
 
 type DraftItem = {
   code: string;
@@ -53,17 +53,12 @@ const PovracajCreateScreen = () => {
       router.push('/');
       return;
     }
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? window.location.origin.replace(':3000', ':8000') : 'http://localhost:8000');
-    fetch(apiUrl + '/auth/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then(async (res) => {
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/');
-        return;
-      }
-      const json = await res.json();
-      setMe(json);
+    getMe().then((user) => {
+      setMe(user);
+    }).catch((err) => {
+      console.error('Failed to fetch user:', err);
+      localStorage.removeItem('token');
+      router.push('/');
     });
   }, [router]);
 
