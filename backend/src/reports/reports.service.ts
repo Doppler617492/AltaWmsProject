@@ -71,6 +71,8 @@ export class ReportsService {
     if (filters.from || filters.to) {
       const start = filters.from ? new Date(filters.from) : new Date('2020-01-01');
       const end = filters.to ? new Date(filters.to) : new Date();
+      // Extend end date to include the full day (23:59:59)
+      end.setHours(23, 59, 59, 999);
       dateFilter.created_at = Between(start, end);
     }
 
@@ -240,6 +242,8 @@ export class ReportsService {
     if (filters.from || filters.to) {
       const start = filters.from ? new Date(filters.from) : new Date('2020-01-01');
       const end = filters.to ? new Date(filters.to) : new Date();
+      // Extend end date to include the full day (23:59:59)
+      end.setHours(23, 59, 59, 999);
       
       // Get COMPLETED orders (filter by completed_at)
       const completedOrders = await this.shippingOrderRepo.find({
