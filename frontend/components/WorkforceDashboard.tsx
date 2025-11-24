@@ -76,10 +76,8 @@ export default function WorkforceDashboard() {
     (async()=>{ 
       try{ 
         const t = await apiClient.get('/teams'); 
-        console.log('Teams loaded:', t);
         setTeams(Array.isArray(t)?t:[]); 
-      } catch(err) { 
-        console.error('Failed to load teams:', err);
+      } catch { 
         setTeams([]);
       } 
     })(); 
@@ -209,19 +207,12 @@ export default function WorkforceDashboard() {
       teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
     );
     
-    console.log('Filtering - View mode:', viewMode);
-    console.log('Teams:', teams.length);
-    console.log('Team member IDs:', Array.from(teamMemberIds));
-    console.log('Total workers:', data.length);
-    
     if (viewMode === 'individuals') {
       // Show only workers who are NOT part of any team
       result = result.filter(w => !teamMemberIds.has(w.user_id));
-      console.log('Filtered individuals:', result.length);
     } else {
       // Show only workers who ARE part of a team
       result = result.filter(w => teamMemberIds.has(w.user_id));
-      console.log('Filtered team members:', result.length);
     }
     
     return result;
@@ -430,6 +421,7 @@ export default function WorkforceDashboard() {
       </div>
       )}
 
+      {/* Worker Cards - Show based on view mode */}
       {loading ? <div style={{ color: colors.textPrimary, padding: '1rem' }}>Učitavanje…</div> : error ? <div style={{ color: colors.statusErr, padding: '1rem' }}>{error}</div> : (
         <div style={{ ...grid }}>
           {filtered.map(w => (
