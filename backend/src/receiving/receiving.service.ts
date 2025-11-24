@@ -1063,6 +1063,22 @@ export class ReceivingService {
     return await this.receivingDocumentRepository.delete(id);
   }
 
+  async deleteDocumentsBulk(documentIds: number[], actor?: { id: number; role: string }) {
+    const results = { deleted: 0, skipped: 0, errors: [] as string[] };
+    
+    for (const id of documentIds) {
+      try {
+        await this.deleteDocument(id, actor);
+        results.deleted++;
+      } catch (e: any) {
+        results.skipped++;
+        results.errors.push(`Dokument ${id}: ${e?.message || 'Nepoznata greška'}`);
+      }
+    }
+
+    return results;
+  }
+
   private async logAudit(documentId: number, action: string, payload: Record<string, any>) {
     try {
       await this.auditRepo.insert({

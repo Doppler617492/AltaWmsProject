@@ -212,6 +212,15 @@ export class ReceivingController {
     return this.receivingService.deleteDocument(parseInt(id), actor);
   }
 
+  @Post('documents/bulk-delete')
+  async bulkDeleteDocuments(
+    @Body() body: { documentIds: number[] },
+    @Req() req: any,
+  ) {
+    const actor = req?.user ? { id: req.user.id, role: req.user.role } : undefined;
+    return this.receivingService.deleteDocumentsBulk(body.documentIds || [], actor);
+  }
+
   @Post('import')
   @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
   async importFromPantheon(

@@ -147,6 +147,8 @@ export default function ReceivingDocuments() {
   const [actorRole, setActorRole] = useState<string>('');
   const [putawaySuggestions, setPutawaySuggestions] = useState<Record<number, any>>({});
   const [syncing, setSyncing] = useState(false);
+  const [selectedDocuments, setSelectedDocuments] = useState<Set<number>>(new Set());
+  const [deleting, setDeleting] = useState(false);
   const [newDocument, setNewDocument] = useState({
     document_number: '',
     supplier_id: '',
@@ -284,6 +286,54 @@ export default function ReceivingDocuments() {
       console.error('Error deleting document:', err);
       alert('Greška pri brisanju dokumenta');
     }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedDocuments.size === 0) {
+      alert('Niste odabrali nijedan dokument za brisanje');
+      return;
+    }
+
+    const count = selectedDocuments.size;
+    if (!confirm(`Da li ste sigurni da želite da obrišete ${count} ${count === 1 ? 'dokument' : 'dokumenata'}?`)) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      const documentIds = Array.from(selectedDocuments);
+      const result = await apiClient.post('/receiving/documents/bulk-delete', { documentIds });
+      
+      if (result.deleted > 0) {
+        alert(`Uspešno obrisano ${result.deleted} ${result.deleted === 1 ? 'dokument' : 'dokumenata'}.${result.skipped > 0 ? ` Preskočeno: ${result.skipped}` : ''}`);
+        setSelectedDocuments(new Set());
+        await fetchDocuments();
+      } else {
+        alert(`Nijedan dokument nije obrisan.${result.errors.length > 0 ? '\n' + result.errors.join('\n') : ''}`);
+      }
+    } catch (e: any) {
+      alert(e?.message || 'Greška pri brisanju dokumenata');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDocuments.size === documents.length) {
+      setSelectedDocuments(new Set());
+    } else {
+      setSelectedDocuments(new Set(documents.map(d => d.id)));
+    }
+  };
+
+  const handleSelectDocument = (docId: number) => {
+    const newSelected = new Set(selectedDocuments);
+    if (newSelected.has(docId)) {
+      newSelected.delete(docId);
+    } else {
+      newSelected.add(docId);
+    }
+    setSelectedDocuments(newSelected);
   };
 
   const handlePrintDocument = () => {
@@ -811,18 +861,51 @@ export default function ReceivingDocuments() {
         </div>
       </div>
       
+      {selectedDocuments.size > 0 && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, padding: '8px 12px', background: '#2a2a3e', borderRadius: 6 }}>
+          <span style={{ color: '#94a3b8', fontSize: 12 }}>
+            Odabrano: {selectedDocuments.size}
+          </span>
+          <button
+            style={{
+              background: '#ef4444',
+              border: 'none',
+              color: '#fff',
+              padding: '6px 12px',
+              borderRadius: 6,
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: deleting ? 'not-allowed' : 'pointer',
+              opacity: deleting ? 0.6 : 1,
+            }}
+            onClick={handleBulkDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Brišem…' : `Obriši ${selectedDocuments.size} ${selectedDocuments.size === 1 ? 'dokument' : 'dokumenata'}`}
+          </button>
+        </div>
+      )}
+      
       <div style={styles.tableContainer}>
         <table style={styles.table}>
           <thead>
             <tr>
-              <th style={{ ...styles.th, width: '16%' }}>Broj dokumenta</th>
-              <th style={{ ...styles.th, width: '20%' }}>Dobavljač</th>
-              <th style={{ ...styles.th, width: '14%' }}>Kreirao</th>
+              <th style={{ ...styles.th, width: '3%' }}>
+                <input
+                  type="checkbox"
+                  checked={documents.length > 0 && selectedDocuments.size === documents.length}
+                  onChange={handleSelectAll}
+                  style={{ cursor: 'pointer' }}
+                />
+              </th>
+              <th style={{ ...styles.th, width: '15%' }}>Broj dokumenta</th>
+              <th style={{ ...styles.th, width: '19%' }}>Dobavljač</th>
+              <th style={{ ...styles.th, width: '12%' }}>Kreirao</th>
               <th style={{ ...styles.th, width: '12%', textAlign: 'center' as const }}>Status</th>
-              <th style={{ ...styles.th, width: '14%', textAlign: 'center' as const }}>Progres</th>
-              <th style={{ ...styles.th, width: '9%', textAlign: 'center' as const }}>Starost</th>
-              <th style={{ ...styles.th, width: '9%', textAlign: 'center' as const }}>Datum</th>
-              <th style={{ ...styles.th, width: '16%', textAlign: 'center' as const }}>Akcije</th>
+              <th style={{ ...styles.th, width: '13%', textAlign: 'center' as const }}>Progres</th>
+              <th style={{ ...styles.th, width: '8%', textAlign: 'center' as const }}>Starost</th>
+              <th style={{ ...styles.th, width: '8%', textAlign: 'center' as const }}>Datum</th>
+              <th style={{ ...styles.th, width: '14%', textAlign: 'center' as const }}>Akcije</th>
             </tr>
           </thead>
           <tbody>
@@ -832,14 +915,22 @@ export default function ReceivingDocuments() {
               const ageMinutes = resolveDocumentAgeMinutes(doc);
               return (
               <tr key={doc.id} style={styles.tr}>
-                <td style={{ ...styles.td, width: '16%' }}>{doc.document_number}</td>
-                <td style={{ ...styles.td, width: '20%' }}>{doc.supplier?.name || '—'}</td>
-                <td style={{ ...styles.td, width: '14%' }}>{creatorName}</td>
+                <td style={{ ...styles.td, width: '3%', textAlign: 'center' as const }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedDocuments.has(doc.id)}
+                    onChange={() => handleSelectDocument(doc.id)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </td>
+                <td style={{ ...styles.td, width: '15%' }}>{doc.document_number}</td>
+                <td style={{ ...styles.td, width: '19%' }}>{doc.supplier?.name || '—'}</td>
+                <td style={{ ...styles.td, width: '12%' }}>{creatorName}</td>
                 <td style={{ ...styles.td, width: '12%', textAlign: 'center' as const }}>{renderDocumentStatusBadge(doc)}</td>
-                <td style={{ ...styles.td, width: '14%', textAlign: 'center' as const }}><ProgressMeter value={progressPct} /></td>
-                <td style={{ ...styles.td, width: '9%', textAlign: 'center' as const }}>{`${ageMinutes} min`}</td>
-                <td style={{ ...styles.td, width: '9%', textAlign: 'center' as const }}>{new Date(doc.created_at).toLocaleDateString('sr-Latn-RS')}</td>
-                <td style={{ ...styles.td, width: '16%', textAlign: 'center' as const }}>
+                <td style={{ ...styles.td, width: '13%', textAlign: 'center' as const }}><ProgressMeter value={progressPct} /></td>
+                <td style={{ ...styles.td, width: '8%', textAlign: 'center' as const }}>{`${ageMinutes} min`}</td>
+                <td style={{ ...styles.td, width: '8%', textAlign: 'center' as const }}>{new Date(doc.created_at).toLocaleDateString('sr-Latn-RS')}</td>
+                <td style={{ ...styles.td, width: '14%', textAlign: 'center' as const }}>
                   <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                     <button 
                       onClick={() => setSelectedDocument(doc)}
