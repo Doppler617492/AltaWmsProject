@@ -270,7 +270,7 @@ export default function WorkforceDashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div style={{ display: 'flex', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <button
           onClick={() => setViewMode('individuals')}
           style={{
@@ -307,6 +307,11 @@ export default function WorkforceDashboard() {
         >
           Timovi
         </button>
+        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+          DEBUG: 1-member teams: {teams.filter(t => (t.members || []).length === 1).length} | 
+          2-member teams: {teams.filter(t => (t.members || []).length === 2).length} | 
+          Total workers: {data.length} | Showing: {filtered.length}
+        </div>
       </div>
 
       {/* Timovi Section - Only show when in teams view */}
