@@ -563,6 +563,7 @@ const ReportsPage: React.FC = () => {
                 >
                   <option value="ALL">Svi tipovi</option>
                   <option value="RECEIVING">Prijem</option>
+                  <option value="SHIPPING">Otprema</option>
                   <option value="CYCLE_COUNT">Popis</option>
                   <option value="SKART">SKART</option>
                   <option value="POVRACAJ">Povraćaj</option>
@@ -697,8 +698,16 @@ const ReportsPage: React.FC = () => {
                           <td style={{ padding: '16px 20px', fontSize: '14px' }}>
                             <span style={{
                               padding: '4px 10px',
-                              background: task.task_type === 'RECEIVING' ? 'rgba(59,130,246,0.2)' : task.task_type === 'CYCLE_COUNT' ? 'rgba(250,204,21,0.2)' : 'rgba(236,72,153,0.2)',
-                              color: task.task_type === 'RECEIVING' ? '#60a5fa' : task.task_type === 'CYCLE_COUNT' ? colors.brandYellow : '#f472b6',
+                              background: 
+                                task.task_type === 'RECEIVING' ? 'rgba(59,130,246,0.2)' : 
+                                task.task_type === 'SHIPPING' ? 'rgba(16,185,129,0.2)' :
+                                task.task_type === 'CYCLE_COUNT' ? 'rgba(250,204,21,0.2)' : 
+                                'rgba(236,72,153,0.2)',
+                              color: 
+                                task.task_type === 'RECEIVING' ? '#60a5fa' : 
+                                task.task_type === 'SHIPPING' ? '#10b981' :
+                                task.task_type === 'CYCLE_COUNT' ? colors.brandYellow : 
+                                '#f472b6',
                               borderRadius: '6px',
                               fontSize: '12px',
                               fontWeight: '600',

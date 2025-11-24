@@ -14,6 +14,8 @@ import { SkartDocument } from '../skart/entities/skart-document.entity';
 import { SkartItem } from '../skart/entities/skart-item.entity';
 import { PovracajDocument } from '../povracaj/entities/povracaj-document.entity';
 import { PovracajItem } from '../povracaj/entities/povracaj-item.entity';
+import { ShippingOrder } from '../entities/shipping-order.entity';
+import { ShippingOrderLine } from '../entities/shipping-order-line.entity';
 import { Item } from '../entities/item.entity';
 
 interface ReportFilters {
@@ -53,6 +55,10 @@ export class ReportsService {
     private povracajDocRepo: Repository<PovracajDocument>,
     @InjectRepository(PovracajItem)
     private povracajItemRepo: Repository<PovracajItem>,
+    @InjectRepository(ShippingOrder)
+    private shippingOrderRepo: Repository<ShippingOrder>,
+    @InjectRepository(ShippingOrderLine)
+    private shippingLineRepo: Repository<ShippingOrderLine>,
     @InjectRepository(Item)
     private itemRepo: Repository<Item>,
   ) {}
@@ -221,6 +227,45 @@ export class ReportsService {
             sku: i.code,
             name: i.name,
             quantity: parseFloat(i.qty),
+          })),
+        },
+      });
+    }
+
+    // Get Shipping tasks
+    const shippingOrders = await this.shippingOrderRepo.find({
+      where: {
+        ...dateFilter,
+        status: In(['COMPLETED', 'CLOSED']),
+        ...(filters.workerId && { assigned_user_id: filters.workerId }),
+      },
+      relations: ['assigned_user', 'assigned_team', 'lines', 'lines.item'],
+    });
+
+    for (const order of shippingOrders) {
+      tasks.push({
+        id: order.id,
+        date: order.completed_at || order.loaded_at || order.created_at,
+        worker: order.assigned_user?.full_name || order.assigned_user?.username || 'N/A',
+        worker_id: order.assigned_user_id,
+        team: order.assigned_team?.name || null,
+        task_type: 'SHIPPING',
+        document_id: order.order_number,
+        items_count: order.lines.length,
+        quantity: order.lines.reduce((sum, line) => sum + parseFloat(line.picked_qty || '0'), 0),
+        duration: order.completed_at && order.started_at 
+          ? Math.round((new Date(order.completed_at).getTime() - new Date(order.started_at).getTime()) / 60000)
+          : null,
+        details: {
+          customer: order.customer_name,
+          store: order.store_name || 'N/A',
+          status: order.status,
+          items: order.lines.map(l => ({
+            sku: l.item?.sku || 'N/A',
+            name: l.item?.name || 'N/A',
+            requested: parseFloat(l.requested_qty),
+            picked: parseFloat(l.picked_qty || '0'),
+            difference: parseFloat(l.picked_qty || '0') - parseFloat(l.requested_qty),
           })),
         },
       });
