@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { getMyActiveReceivings, startReceiving } from '../lib/apiClient';
+import { getMe, getMyActiveReceivings, startReceiving } from '../lib/apiClient';
 import PwaHeader from '../../components/PwaHeader';
 import PwaBackButton from '../../components/PwaBackButton';
 
@@ -13,11 +13,14 @@ export default function ReceivingListScreen() {
   const load = async () => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/'); return; }
-    const meRes = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + '/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-    if (meRes.status === 401) { localStorage.removeItem('token'); router.push('/'); return; }
-    const meJson = await meRes.json(); setMe(meJson);
-    const data = await getMyActiveReceivings();
-    setList(Array.isArray(data) ? data : []);
+    try {
+      const meJson = await getMe();
+      setMe(meJson);
+      const data = await getMyActiveReceivings();
+      setList(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load receiving data:', err);
+    }
   };
 
   useEffect(() => {

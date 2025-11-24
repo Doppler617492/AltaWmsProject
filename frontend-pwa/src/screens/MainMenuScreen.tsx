@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { getMyActiveReceivings, getMyShippingOrders, listSkartDocuments, listPovracajDocuments } from '../lib/apiClient';
+import { getMe, getMyActiveReceivings, getMyShippingOrders, listSkartDocuments, listPovracajDocuments } from '../lib/apiClient';
 import { startHeartbeat } from '../../lib/heartbeat';
 import { IconPrijem, IconOtprema, IconPopis, IconPremestaj, IconOpcije } from '../components/icons';
 
@@ -15,9 +15,8 @@ export default function MainMenuScreen() {
     try {
       const token = localStorage.getItem('token');
       if (!token) { router.push('/'); return; }
-      const meRes = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + '/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-      if (meRes.status === 401) { localStorage.removeItem('token'); router.push('/'); return; }
-      const meJson = await meRes.json(); setMe(meJson);
+      const meJson = await getMe();
+      setMe(meJson);
       await loadCounts(meJson);
     } catch (err) {
       console.error('PWA main menu load error', err);
@@ -27,13 +26,16 @@ export default function MainMenuScreen() {
   const loadCounts = async (user: any) => {
     try {
       const userId = Number(user?.id);
+      const userRole = (user?.role || '').toLowerCase();
+      // Only warehouse staff can access receiving
+      const canAccessReceiving = ['admin', 'menadzer', 'sef', 'magacioner', 'komercijalista', 'logistika'].includes(userRole);
       const [
         receivings,
         shippingOrders,
         skartRes,
         povracajRes,
       ] = await Promise.all([
-        getMyActiveReceivings().catch(() => []),
+        canAccessReceiving ? getMyActiveReceivings().catch(() => []) : Promise.resolve([]),
         getMyShippingOrders().catch(() => []),
         listSkartDocuments({ status: 'SUBMITTED', assignedToUserId: Number.isFinite(userId) ? userId : undefined }).catch(() => ({ data: [] })),
         listPovracajDocuments({ status: 'SUBMITTED', assignedToUserId: Number.isFinite(userId) ? userId : undefined }).catch(() => ({ data: [] })),
