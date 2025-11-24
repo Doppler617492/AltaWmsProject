@@ -53,7 +53,8 @@ const SkartCreateScreen = () => {
       router.push('/');
       return;
     }
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + '/auth/me', {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? window.location.origin.replace(':3000', ':8000') : 'http://localhost:8000');
+    fetch(apiUrl + '/auth/me', {
       headers: { Authorization: `Bearer ${token}` },
     }).then(async (res) => {
       if (res.status === 401) {

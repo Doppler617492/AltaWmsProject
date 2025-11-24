@@ -46,11 +46,11 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
   const showUsersTab = user && ['admin','sef_magacina','sef'].includes(user.role);
   const showControlTab = user && ['admin','menadzer','sef_magacina'].includes(user.role);
-  const showStockTab = user && ['admin','menadzer','sef_magacina'].includes(user.role);
+  const showStockTab = user && ['admin','menadzer','sef_magacina','sef_prodavnice'].includes(user.role);
   const showWorkforceTab = user && ['admin','sef_magacina'].includes(user.role);
   const showMapTab = user && ['admin','menadzer','sef','sef_magacina','magacioner'].includes(user.role);
   const showLabelingTab = user && ['admin','sef_magacina'].includes(user.role);
-  const showSkartTab = user && ['admin','menadzer','sef','sef_magacina','manager'].includes(user.role);
+  const showSkartTab = user && ['admin','menadzer','sef','sef_magacina','sef_prodavnice','manager'].includes(user.role);
   const UsersLazy = dynamic(() => import('./Users'), { ssr: false });
   const ControlTowerLazy = dynamic(() => import('./ControlTowerDashboard'), { ssr: false });
   const StockDashboardLazy = dynamic(() => import('./StockDashboard'), { ssr: false });
