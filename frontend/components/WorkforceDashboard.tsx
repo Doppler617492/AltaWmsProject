@@ -194,18 +194,16 @@ export default function WorkforceDashboard() {
     }
     
     // Filter by view mode (teams vs individuals)
-    if (viewMode === 'teams') {
-      // Show only workers who are part of a team
-      const teamMemberIds = new Set(
-        teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
-      );
-      result = result.filter(w => teamMemberIds.has(w.user_id));
-    } else {
+    const teamMemberIds = new Set(
+      teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
+    );
+    
+    if (viewMode === 'individuals') {
       // Show only workers who are NOT part of any team
-      const teamMemberIds = new Set(
-        teams.flatMap(team => (team.members || []).map((m: any) => m.user_id))
-      );
       result = result.filter(w => !teamMemberIds.has(w.user_id));
+    } else {
+      // Show only workers who ARE part of a team
+      result = result.filter(w => teamMemberIds.has(w.user_id));
     }
     
     return result;
