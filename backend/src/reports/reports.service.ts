@@ -233,27 +233,50 @@ export class ReportsService {
     }
 
     // Get Shipping tasks
-    const shippingDateFilter: any = {};
+    // For shipping, we need to handle both COMPLETED and CLOSED statuses
+    // COMPLETED orders have completed_at, CLOSED orders have closed_at
+    let shippingOrders = [];
+    
     if (filters.from || filters.to) {
       const start = filters.from ? new Date(filters.from) : new Date('2020-01-01');
       const end = filters.to ? new Date(filters.to) : new Date();
-      // For shipping, filter by completion date, not creation date
-      shippingDateFilter.completed_at = Between(start, end);
-    }
+      
+      // Get COMPLETED orders (filter by completed_at)
+      const completedOrders = await this.shippingOrderRepo.find({
+        where: {
+          completed_at: Between(start, end),
+          status: 'COMPLETED',
+          ...(filters.workerId && { assigned_user_id: filters.workerId }),
+        },
+        relations: ['assigned_user', 'assigned_team', 'lines', 'lines.item'],
+      });
 
-    const shippingOrders = await this.shippingOrderRepo.find({
-      where: {
-        ...shippingDateFilter,
-        status: In(['COMPLETED', 'CLOSED']),
-        ...(filters.workerId && { assigned_user_id: filters.workerId }),
-      },
-      relations: ['assigned_user', 'assigned_team', 'lines', 'lines.item'],
-    });
+      // Get CLOSED orders (filter by closed_at)
+      const closedOrders = await this.shippingOrderRepo.find({
+        where: {
+          closed_at: Between(start, end),
+          status: 'CLOSED',
+          ...(filters.workerId && { assigned_user_id: filters.workerId }),
+        },
+        relations: ['assigned_user', 'assigned_team', 'lines', 'lines.item'],
+      });
+
+      shippingOrders = [...completedOrders, ...closedOrders];
+    } else {
+      // No date filter - get all COMPLETED and CLOSED orders
+      shippingOrders = await this.shippingOrderRepo.find({
+        where: {
+          status: In(['COMPLETED', 'CLOSED']),
+          ...(filters.workerId && { assigned_user_id: filters.workerId }),
+        },
+        relations: ['assigned_user', 'assigned_team', 'lines', 'lines.item'],
+      });
+    }
 
     for (const order of shippingOrders) {
       tasks.push({
         id: order.id,
-        date: order.completed_at || order.loaded_at || order.created_at,
+        date: order.closed_at || order.completed_at || order.loaded_at || order.created_at,
         worker: order.assigned_user?.full_name || order.assigned_user?.username || 'N/A',
         worker_id: order.assigned_user_id,
         team: order.assigned_team?.name || null,
@@ -261,8 +284,8 @@ export class ReportsService {
         document_id: order.order_number,
         items_count: order.lines.length,
         quantity: order.lines.reduce((sum, line) => sum + parseFloat(line.picked_qty || '0'), 0),
-        duration: order.completed_at && order.started_at 
-          ? Math.round((new Date(order.completed_at).getTime() - new Date(order.started_at).getTime()) / 60000)
+        duration: (order.completed_at || order.closed_at) && order.started_at 
+          ? Math.round((new Date(order.completed_at || order.closed_at).getTime() - new Date(order.started_at).getTime()) / 60000)
           : null,
         details: {
           customer: order.customer_name,
