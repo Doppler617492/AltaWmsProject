@@ -15,6 +15,8 @@ import { SkartDocument } from '../skart/entities/skart-document.entity';
 import { SkartItem } from '../skart/entities/skart-item.entity';
 import { PovracajDocument } from '../povracaj/entities/povracaj-document.entity';
 import { PovracajItem } from '../povracaj/entities/povracaj-item.entity';
+import { ShippingOrder } from '../entities/shipping-order.entity';
+import { ShippingOrderLine } from '../entities/shipping-order-line.entity';
 import { Item } from '../entities/item.entity';
 import { Store } from '../entities/store.entity';
 
@@ -34,6 +36,8 @@ import { Store } from '../entities/store.entity';
       SkartItem,
       PovracajDocument,
       PovracajItem,
+      ShippingOrder,
+      ShippingOrderLine,
       Item,
       Store,
     ]),
