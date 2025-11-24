@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MainLayout } from '../src/components/layout/MainLayout';
 import { useRouter } from 'next/router';
 import { apiClient } from '../lib/apiClient';
+import { colors } from '../src/theme/colors';
 
 interface TaskRecord {
   id: number;
@@ -346,29 +347,56 @@ const ReportsPage: React.FC = () => {
   };
 
   return (
-    <MainLayout>
-      <div style={{ padding: '32px 40px', maxWidth: '1600px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-          <div>
-            <h1 style={{ fontSize: '32px', fontWeight: '600', color: '#1a1a1a', marginBottom: '8px' }}>
-              Reporting Center
-            </h1>
-            <p style={{ fontSize: '15px', color: '#666', margin: 0 }}>
-              Comprehensive task history, worker summaries, and compliance reports
-            </p>
+    <MainLayout breadcrumb={['Izveštaji']}>
+      <div style={{
+        background: 'linear-gradient(180deg, #05070d 0%, #020304 100%)',
+        minHeight: '100vh',
+        padding: '2rem clamp(1.5rem, 2vw, 3rem)',
+        boxSizing: 'border-box',
+        color: colors.textPrimary,
+      }}>
+        {/* Hero Section */}
+        <div style={{ marginBottom: '2.5rem' }}>
+          <div style={{
+            textTransform: 'uppercase',
+            letterSpacing: 3,
+            fontSize: 12,
+            color: 'rgba(255,255,255,0.45)',
+            marginBottom: 6,
+          }}>
+            Centar za izveštaje
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <h1 style={{
+            fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+            fontWeight: 800,
+            margin: '0 0 0.75rem',
+            background: 'linear-gradient(135deg, #ffd400 0%, #ffaa00 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            letterSpacing: '-0.02em',
+          }}>
+            Izveštaji
+          </h1>
+          <p style={{
+            fontSize: '1.125rem',
+            color: 'rgba(255,255,255,0.6)',
+            margin: 0,
+            lineHeight: 1.6,
+            maxWidth: '600px',
+          }}>
+            Detaljan pregled zadataka, performansi radnika i timova
+          </p>
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>
             <button
               onClick={handleExportCSV}
               style={{
-                background: '#10b981',
-                color: 'white',
-                border: 'none',
+                background: 'rgba(250,204,21,0.1)',
+                color: colors.brandYellow,
+                border: '1px solid rgba(250,204,21,0.35)',
                 padding: '12px 24px',
-                borderRadius: '8px',
-                fontSize: '15px',
-                fontWeight: '500',
+                borderRadius: 12,
+                fontSize: '14px',
+                fontWeight: 600,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -378,18 +406,18 @@ const ReportsPage: React.FC = () => {
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Export CSV
+              Izvezi CSV
             </button>
             <button
               onClick={handleExportExcel}
               style={{
-                background: '#2563eb',
-                color: 'white',
+                background: colors.brandYellow,
+                color: '#000',
                 border: 'none',
                 padding: '12px 24px',
-                borderRadius: '8px',
-                fontSize: '15px',
-                fontWeight: '500',
+                borderRadius: 12,
+                fontSize: '14px',
+                fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -399,50 +427,54 @@ const ReportsPage: React.FC = () => {
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Export Excel
+              Izvezi Excel
             </button>
           </div>
         </div>
 
         {/* Date Range Filter with Presets */}
         <div style={{
-          background: 'white',
-          padding: '24px',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-          marginBottom: '24px',
+          background: 'rgba(15,23,42,0.75)',
+          border: '1px solid rgba(148,163,184,0.25)',
+          borderRadius: 16,
+          padding: 20,
+          marginBottom: 24,
         }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
-            <label style={{ fontSize: '14px', fontWeight: '500', color: '#444' }}>Quick Select:</label>
-            <button onClick={() => setDatePreset('today')} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>Today</button>
-            <button onClick={() => setDatePreset('week')} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>This Week</button>
-            <button onClick={() => setDatePreset('month')} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>This Month</button>
-            <button onClick={() => setDatePreset('lastMonth')} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>Last Month</button>
+            <label style={{ fontSize: '14px', fontWeight: '600', color: colors.brandYellow }}>Brzi izbor:</label>
+            <button onClick={() => setDatePreset('today')} style={{ padding: '8px 16px', background: 'rgba(250,204,21,0.1)', color: colors.brandYellow, border: '1px solid rgba(250,204,21,0.35)', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>Danas</button>
+            <button onClick={() => setDatePreset('week')} style={{ padding: '8px 16px', background: 'rgba(250,204,21,0.1)', color: colors.brandYellow, border: '1px solid rgba(250,204,21,0.35)', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>Ova nedelja</button>
+            <button onClick={() => setDatePreset('month')} style={{ padding: '8px 16px', background: 'rgba(250,204,21,0.1)', color: colors.brandYellow, border: '1px solid rgba(250,204,21,0.35)', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>Ovaj mesec</button>
+            <button onClick={() => setDatePreset('lastMonth')} style={{ padding: '8px 16px', background: 'rgba(250,204,21,0.1)', color: colors.brandYellow, border: '1px solid rgba(250,204,21,0.35)', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>Prošli mesec</button>
           </div>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <label style={{ fontSize: '14px', fontWeight: '500', color: '#444' }}>Custom Range:</label>
+            <label style={{ fontSize: '14px', fontWeight: '600', color: colors.textPrimary }}>Prilagođen opseg:</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
               style={{
                 padding: '10px 14px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
+                background: 'rgba(15,23,42,0.5)',
+                border: '1px solid rgba(148,163,184,0.35)',
+                borderRadius: '8px',
                 fontSize: '14px',
+                color: colors.textPrimary,
                 flex: '0 0 160px',
               }}
             />
-            <span style={{ color: '#888' }}>to</span>
+            <span style={{ color: 'rgba(255,255,255,0.4)' }}>do</span>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               style={{
                 padding: '10px 14px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
+                background: 'rgba(15,23,42,0.5)',
+                border: '1px solid rgba(148,163,184,0.35)',
+                borderRadius: '8px',
                 fontSize: '14px',
+                color: colors.textPrimary,
                 flex: '0 0 160px',
               }}
             />
@@ -450,17 +482,17 @@ const ReportsPage: React.FC = () => {
               onClick={fetchData}
               style={{
                 padding: '10px 20px',
-                background: '#2563eb',
-                color: 'white',
+                background: colors.brandYellow,
+                color: '#000',
                 border: 'none',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 fontSize: '14px',
-                fontWeight: '500',
+                fontWeight: 700,
                 cursor: 'pointer',
                 marginLeft: 'auto',
               }}
             >
-              Apply Filter
+              Primeni filter
             </button>
           </div>
         </div>
@@ -470,13 +502,13 @@ const ReportsPage: React.FC = () => {
           display: 'flex',
           gap: '8px',
           marginBottom: '24px',
-          borderBottom: '2px solid #e5e7eb',
+          borderBottom: '2px solid rgba(148,163,184,0.15)',
           paddingBottom: '0',
         }}>
           {[
-            { key: 'tasks', label: 'Task History' },
-            { key: 'workers', label: 'Workers Summary' },
-            { key: 'teams', label: 'Teams Summary' },
+            { key: 'tasks', label: 'Istorija zadataka' },
+            { key: 'workers', label: 'Pregled radnika' },
+            { key: 'teams', label: 'Pregled timova' },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -485,10 +517,10 @@ const ReportsPage: React.FC = () => {
                 padding: '14px 28px',
                 background: 'transparent',
                 border: 'none',
-                borderBottom: activeTab === tab.key ? '3px solid #2563eb' : '3px solid transparent',
+                borderBottom: activeTab === tab.key ? `3px solid ${colors.brandYellow}` : '3px solid transparent',
                 fontSize: '15px',
-                fontWeight: activeTab === tab.key ? '600' : '500',
-                color: activeTab === tab.key ? '#2563eb' : '#6b7280',
+                fontWeight: activeTab === tab.key ? '700' : '500',
+                color: activeTab === tab.key ? colors.brandYellow : 'rgba(255,255,255,0.5)',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
@@ -503,18 +535,18 @@ const ReportsPage: React.FC = () => {
           <>
             {/* Additional Filters */}
             <div style={{
-              background: 'white',
-              padding: '20px 24px',
-              borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-              marginBottom: '24px',
+              background: 'rgba(15,23,42,0.75)',
+              border: '1px solid rgba(148,163,184,0.25)',
+              borderRadius: 16,
+              padding: 20,
+              marginBottom: 24,
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
               gap: '16px',
             }}>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>
-                  Task Type
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: colors.brandYellow, marginBottom: '6px' }}>
+                  Tip zadatka
                 </label>
                 <select
                   value={taskType}
@@ -522,21 +554,23 @@ const ReportsPage: React.FC = () => {
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
+                    background: 'rgba(15,23,42,0.5)',
+                    border: '1px solid rgba(148,163,184,0.35)',
+                    borderRadius: '8px',
                     fontSize: '14px',
+                    color: colors.textPrimary,
                   }}
                 >
-                  <option value="ALL">All Types</option>
-                  <option value="RECEIVING">Receiving</option>
-                  <option value="CYCLE_COUNT">Cycle Count</option>
+                  <option value="ALL">Svi tipovi</option>
+                  <option value="RECEIVING">Prijem</option>
+                  <option value="CYCLE_COUNT">Popis</option>
                   <option value="SKART">SKART</option>
                   <option value="POVRACAJ">Povraćaj</option>
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>
-                  Worker
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: colors.brandYellow, marginBottom: '6px' }}>
+                  Radnik
                 </label>
                 <select
                   value={selectedWorker}
@@ -544,20 +578,22 @@ const ReportsPage: React.FC = () => {
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
+                    background: 'rgba(15,23,42,0.5)',
+                    border: '1px solid rgba(148,163,184,0.35)',
+                    borderRadius: '8px',
                     fontSize: '14px',
+                    color: colors.textPrimary,
                   }}
                 >
-                  <option value="">All Workers</option>
+                  <option value="">Svi radnici</option>
                   {usersList.map(user => (
                     <option key={user.id} value={user.id}>{user.full_name || user.username}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>
-                  Team
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: colors.brandYellow, marginBottom: '6px' }}>
+                  Tim
                 </label>
                 <select
                   value={selectedTeam}
@@ -565,50 +601,56 @@ const ReportsPage: React.FC = () => {
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
+                    background: 'rgba(15,23,42,0.5)',
+                    border: '1px solid rgba(148,163,184,0.35)',
+                    borderRadius: '8px',
                     fontSize: '14px',
+                    color: colors.textPrimary,
                   }}
                 >
-                  <option value="">All Teams</option>
+                  <option value="">Svi timovi</option>
                   {teamsList.map(team => (
                     <option key={team.id} value={team.id}>{team.name}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: colors.brandYellow, marginBottom: '6px' }}>
                   SKU
                 </label>
                 <input
                   type="text"
                   value={skuFilter}
                   onChange={(e) => setSkuFilter(e.target.value)}
-                  placeholder="Search by SKU..."
+                  placeholder="Pretraži po SKU..."
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
+                    background: 'rgba(15,23,42,0.5)',
+                    border: '1px solid rgba(148,163,184,0.35)',
+                    borderRadius: '8px',
                     fontSize: '14px',
+                    color: colors.textPrimary,
                   }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>
-                  Location
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: colors.brandYellow, marginBottom: '6px' }}>
+                  Lokacija
                 </label>
                 <input
                   type="text"
                   value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
-                  placeholder="Search by location..."
+                  placeholder="Pretraži po lokaciji..."
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
+                    background: 'rgba(15,23,42,0.5)',
+                    border: '1px solid rgba(148,163,184,0.35)',
+                    borderRadius: '8px',
                     fontSize: '14px',
+                    color: colors.textPrimary,
                   }}
                 />
               </div>
@@ -616,58 +658,58 @@ const ReportsPage: React.FC = () => {
 
             {/* Tasks Table */}
             <div style={{
-              background: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+              background: 'rgba(15,23,42,0.75)',
+              border: '1px solid rgba(148,163,184,0.25)',
+              borderRadius: 16,
               overflow: 'hidden',
             }}>
               {loading ? (
-                <div style={{ padding: '60px', textAlign: 'center', color: '#999' }}>
-                  Loading tasks...
+                <div style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
+                  Učitavanje zadataka...
                 </div>
               ) : tasks.length === 0 ? (
-                <div style={{ padding: '60px', textAlign: 'center', color: '#999' }}>
-                  No tasks found for the selected date range and filters.
+                <div style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
+                  Nema pronađenih zadataka za izabrani period i filtere.
                 </div>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                      <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-                        <th onClick={() => handleSort('date')} style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Date/Time {sortField === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                        <th onClick={() => handleSort('worker')} style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Worker {sortField === 'worker' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                        <th onClick={() => handleSort('task_type')} style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Task Type {sortField === 'task_type' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                        <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151' }}>Document ID</th>
-                        <th onClick={() => handleSort('items_count')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Items {sortField === 'items_count' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                        <th onClick={() => handleSort('quantity')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Quantity {sortField === 'quantity' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                        <th onClick={() => handleSort('duration')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Duration {sortField === 'duration' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                        <th style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151' }}>Actions</th>
+                      <tr style={{ background: 'rgba(15,23,42,0.9)', borderBottom: '2px solid rgba(148,163,184,0.15)' }}>
+                        <th onClick={() => handleSort('date')} style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Datum/Vreme {sortField === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                        <th onClick={() => handleSort('worker')} style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Radnik {sortField === 'worker' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                        <th onClick={() => handleSort('task_type')} style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Tip {sortField === 'task_type' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: colors.brandYellow }}>ID Dokumenta</th>
+                        <th onClick={() => handleSort('items_count')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Stavke {sortField === 'items_count' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                        <th onClick={() => handleSort('quantity')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Količina {sortField === 'quantity' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                        <th onClick={() => handleSort('duration')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Trajanje {sortField === 'duration' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow }}>Akcije</th>
                       </tr>
                     </thead>
                     <tbody>
                       {getSortedAndPaginatedData().map((task, idx) => (
                         <tr key={`${task.task_type}-${task.id}`} style={{
-                          borderBottom: '1px solid #f3f4f6',
-                          background: idx % 2 === 0 ? 'white' : '#fafbfc',
+                          borderBottom: '1px solid rgba(148,163,184,0.1)',
+                          background: idx % 2 === 0 ? 'rgba(15,23,42,0.4)' : 'rgba(15,23,42,0.2)',
                         }}>
-                          <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937' }}>{formatDate(task.date)}</td>
-                          <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937' }}>{task.worker}</td>
+                          <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary }}>{formatDate(task.date)}</td>
+                          <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary }}>{task.worker}</td>
                           <td style={{ padding: '16px 20px', fontSize: '14px' }}>
                             <span style={{
                               padding: '4px 10px',
-                              background: task.task_type === 'RECEIVING' ? '#dbeafe' : task.task_type === 'CYCLE_COUNT' ? '#fef3c7' : '#fce7f3',
-                              color: task.task_type === 'RECEIVING' ? '#1e40af' : task.task_type === 'CYCLE_COUNT' ? '#92400e' : '#9f1239',
+                              background: task.task_type === 'RECEIVING' ? 'rgba(59,130,246,0.2)' : task.task_type === 'CYCLE_COUNT' ? 'rgba(250,204,21,0.2)' : 'rgba(236,72,153,0.2)',
+                              color: task.task_type === 'RECEIVING' ? '#60a5fa' : task.task_type === 'CYCLE_COUNT' ? colors.brandYellow : '#f472b6',
                               borderRadius: '6px',
                               fontSize: '12px',
-                              fontWeight: '500',
+                              fontWeight: '600',
                             }}>
                               {task.task_type.replace('_', ' ')}
                             </span>
                           </td>
-                          <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', fontFamily: 'monospace' }}>{task.document_id}</td>
-                          <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', textAlign: 'center' }}>{task.items_count}</td>
-                          <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', textAlign: 'center', fontWeight: '500' }}>{task.quantity}</td>
-                          <td style={{ padding: '16px 20px', fontSize: '14px', color: '#6b7280', textAlign: 'center' }}>{formatDuration(task.duration)}</td>
+                          <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, fontFamily: 'monospace' }}>{task.document_id}</td>
+                          <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, textAlign: 'center' }}>{task.items_count}</td>
+                          <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, textAlign: 'center', fontWeight: '600' }}>{task.quantity}</td>
+                          <td style={{ padding: '16px 20px', fontSize: '14px', color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{formatDuration(task.duration)}</td>
                           <td style={{ padding: '16px 20px', textAlign: 'center' }}>
                             <button
                               onClick={() => {
@@ -676,16 +718,16 @@ const ReportsPage: React.FC = () => {
                               }}
                               style={{
                                 padding: '6px 14px',
-                                background: '#f3f4f6',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
+                                background: 'rgba(250,204,21,0.1)',
+                                border: '1px solid rgba(250,204,21,0.35)',
+                                borderRadius: '8px',
                                 fontSize: '13px',
-                                fontWeight: '500',
-                                color: '#374151',
+                                fontWeight: '600',
+                                color: colors.brandYellow,
                                 cursor: 'pointer',
                               }}
                             >
-                              Details
+                              Detalji
                             </button>
                           </td>
                         </tr>
@@ -696,21 +738,21 @@ const ReportsPage: React.FC = () => {
               )}
               {/* Pagination */}
               {tasks.length > 0 && (
-                <div style={{ padding: '20px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ padding: '20px', borderTop: '1px solid rgba(148,163,184,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: '#6b7280' }}>Page size:</span>
-                    <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} style={{ padding: '6px 10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}>
+                    <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Veličina stranice:</span>
+                    <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} style={{ padding: '6px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: '8px', fontSize: '13px', color: colors.textPrimary }}>
                       <option value={10}>10</option>
                       <option value={25}>25</option>
                       <option value={50}>50</option>
                       <option value={100}>100</option>
                     </select>
-                    <span style={{ fontSize: '14px', color: '#6b7280', marginLeft: '16px' }}>Showing {Math.min((currentPage - 1) * pageSize + 1, tasks.length)}-{Math.min(currentPage * pageSize, tasks.length)} of {tasks.length}</span>
+                    <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginLeft: '16px' }}>Prikazano {Math.min((currentPage - 1) * pageSize + 1, tasks.length)}-{Math.min(currentPage * pageSize, tasks.length)} od {tasks.length}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} style={{ padding: '8px 12px', background: currentPage === 1 ? '#f3f4f6' : 'white', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
-                    <span style={{ padding: '8px 12px', fontSize: '13px', color: '#374151' }}>Page {currentPage} of {getTotalPages()}</span>
-                    <button disabled={currentPage >= getTotalPages()} onClick={() => setCurrentPage(currentPage + 1)} style={{ padding: '8px 12px', background: currentPage >= getTotalPages() ? '#f3f4f6' : 'white', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', cursor: currentPage >= getTotalPages() ? 'not-allowed' : 'pointer' }}>Next</button>
+                    <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} style={{ padding: '8px 12px', background: currentPage === 1 ? 'rgba(15,23,42,0.5)' : 'rgba(250,204,21,0.1)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: '8px', fontSize: '13px', color: currentPage === 1 ? 'rgba(255,255,255,0.3)' : colors.brandYellow, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 600 }}>Prethodna</button>
+                    <span style={{ padding: '8px 12px', fontSize: '13px', color: colors.textPrimary }}>Stranica {currentPage} od {getTotalPages()}</span>
+                    <button disabled={currentPage >= getTotalPages()} onClick={() => setCurrentPage(currentPage + 1)} style={{ padding: '8px 12px', background: currentPage >= getTotalPages() ? 'rgba(15,23,42,0.5)' : 'rgba(250,204,21,0.1)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: '8px', fontSize: '13px', color: currentPage >= getTotalPages() ? 'rgba(255,255,255,0.3)' : colors.brandYellow, cursor: currentPage >= getTotalPages() ? 'not-allowed' : 'pointer', fontWeight: 600 }}>Sledeća</button>
                   </div>
                 </div>
               )}
@@ -721,42 +763,42 @@ const ReportsPage: React.FC = () => {
         {/* Workers Summary Tab */}
         {activeTab === 'workers' && (
           <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            background: 'rgba(15,23,42,0.75)',
+            border: '1px solid rgba(148,163,184,0.25)',
+            borderRadius: '16px',
             overflow: 'hidden',
           }}>
             {loading ? (
-              <div style={{ padding: '60px', textAlign: 'center', color: '#999' }}>
-                Loading workers summary...
+              <div style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>
+                Učitavanje pregleda radnika...
               </div>
             ) : workers.length === 0 ? (
-              <div style={{ padding: '60px', textAlign: 'center', color: '#999' }}>
-                No worker data found for the selected date range.
+              <div style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>
+                Nema podataka o radnicima za izabrani period.
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-                      <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151' }}>Worker</th>
-                      <th onClick={() => handleSort('tasks_completed')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Tasks Completed {sortField === 'tasks_completed' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                      <th onClick={() => handleSort('lines_processed')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Lines Processed {sortField === 'lines_processed' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                      <th onClick={() => handleSort('total_quantity')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Total Quantity {sortField === 'total_quantity' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                      <th style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151' }}>Active Time</th>
+                    <tr style={{ background: 'rgba(15,23,42,0.9)', borderBottom: '2px solid rgba(148,163,184,0.15)' }}>
+                      <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: colors.brandYellow }}>Radnik</th>
+                      <th onClick={() => handleSort('tasks_completed')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Završeni zadaci {sortField === 'tasks_completed' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                      <th onClick={() => handleSort('lines_processed')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Obrađene stavke {sortField === 'lines_processed' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                      <th onClick={() => handleSort('total_quantity')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Ukupna količina {sortField === 'total_quantity' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                      <th style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow }}>Aktivno vreme</th>
                     </tr>
                   </thead>
                   <tbody>
                     {getSortedAndPaginatedData().map((worker, idx) => (
                       <tr key={worker.worker_id} style={{
-                        borderBottom: '1px solid #f3f4f6',
-                        background: idx % 2 === 0 ? 'white' : '#fafbfc',
+                        borderBottom: '1px solid rgba(148,163,184,0.1)',
+                        background: idx % 2 === 0 ? 'rgba(15,23,42,0.4)' : 'rgba(15,23,42,0.2)',
                       }}>
-                        <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', fontWeight: '500' }}>{worker.worker_name}</td>
-                        <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', textAlign: 'center' }}>{worker.tasks_completed}</td>
-                        <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', textAlign: 'center' }}>{worker.lines_processed}</td>
-                        <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', textAlign: 'center', fontWeight: '500' }}>{worker.total_quantity}</td>
-                        <td style={{ padding: '16px 20px', fontSize: '14px', color: '#6b7280', textAlign: 'center' }}>{formatDuration(worker.total_active_time)}</td>
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, fontWeight: '500' }}>{worker.worker_name}</td>
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, textAlign: 'center' }}>{worker.tasks_completed}</td>
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, textAlign: 'center' }}>{worker.lines_processed}</td>
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, textAlign: 'center', fontWeight: '500' }}>{worker.total_quantity}</td>
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{formatDuration(worker.total_active_time)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -765,21 +807,21 @@ const ReportsPage: React.FC = () => {
             )}
             {/* Pagination */}
             {workers.length > 0 && (
-              <div style={{ padding: '20px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '20px', borderTop: '1px solid rgba(148,163,184,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: '#6b7280' }}>Page size:</span>
-                  <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} style={{ padding: '6px 10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}>
+                  <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Veličina stranice:</span>
+                  <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} style={{ padding: '6px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: '8px', fontSize: '13px', color: colors.textPrimary }}>
                     <option value={10}>10</option>
                     <option value={25}>25</option>
                     <option value={50}>50</option>
                     <option value={100}>100</option>
                   </select>
-                  <span style={{ fontSize: '14px', color: '#6b7280', marginLeft: '16px' }}>Showing {Math.min((currentPage - 1) * pageSize + 1, workers.length)}-{Math.min(currentPage * pageSize, workers.length)} of {workers.length}</span>
+                  <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginLeft: '16px' }}>Prikazano {Math.min((currentPage - 1) * pageSize + 1, workers.length)}-{Math.min(currentPage * pageSize, workers.length)} od {workers.length}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} style={{ padding: '8px 12px', background: currentPage === 1 ? '#f3f4f6' : 'white', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
-                  <span style={{ padding: '8px 12px', fontSize: '13px', color: '#374151' }}>Page {currentPage} of {getTotalPages()}</span>
-                  <button disabled={currentPage >= getTotalPages()} onClick={() => setCurrentPage(currentPage + 1)} style={{ padding: '8px 12px', background: currentPage >= getTotalPages() ? '#f3f4f6' : 'white', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', cursor: currentPage >= getTotalPages() ? 'not-allowed' : 'pointer' }}>Next</button>
+                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} style={{ padding: '8px 12px', background: currentPage === 1 ? 'rgba(15,23,42,0.5)' : 'rgba(250,204,21,0.1)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: '8px', fontSize: '13px', color: currentPage === 1 ? 'rgba(255,255,255,0.3)' : colors.brandYellow, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 600 }}>Prethodna</button>
+                  <span style={{ padding: '8px 12px', fontSize: '13px', color: colors.textPrimary }}>Stranica {currentPage} od {getTotalPages()}</span>
+                  <button disabled={currentPage >= getTotalPages()} onClick={() => setCurrentPage(currentPage + 1)} style={{ padding: '8px 12px', background: currentPage >= getTotalPages() ? 'rgba(15,23,42,0.5)' : 'rgba(250,204,21,0.1)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: '8px', fontSize: '13px', color: currentPage >= getTotalPages() ? 'rgba(255,255,255,0.3)' : colors.brandYellow, cursor: currentPage >= getTotalPages() ? 'not-allowed' : 'pointer', fontWeight: 600 }}>Sledeća</button>
                 </div>
               </div>
             )}
@@ -789,42 +831,42 @@ const ReportsPage: React.FC = () => {
         {/* Teams Summary Tab */}
         {activeTab === 'teams' && (
           <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            background: 'rgba(15,23,42,0.75)',
+            border: '1px solid rgba(148,163,184,0.25)',
+            borderRadius: '16px',
             overflow: 'hidden',
           }}>
             {loading ? (
-              <div style={{ padding: '60px', textAlign: 'center', color: '#999' }}>
-                Loading teams summary...
+              <div style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>
+                Učitavanje pregleda timova...
               </div>
             ) : teams.length === 0 ? (
-              <div style={{ padding: '60px', textAlign: 'center', color: '#999' }}>
-                No team data found for the selected date range.
+              <div style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>
+                Nema podataka o timovima za izabrani period.
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-                      <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151' }}>Team</th>
-                      <th onClick={() => handleSort('tasks_completed')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Tasks Completed {sortField === 'tasks_completed' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                      <th onClick={() => handleSort('lines_processed')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Lines Processed {sortField === 'lines_processed' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                      <th onClick={() => handleSort('total_quantity')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Total Quantity {sortField === 'total_quantity' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                      <th onClick={() => handleSort('time_spent')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', userSelect: 'none' }}>Time Spent {sortField === 'time_spent' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                    <tr style={{ background: 'rgba(15,23,42,0.9)', borderBottom: '2px solid rgba(148,163,184,0.15)' }}>
+                      <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: colors.brandYellow }}>Tim</th>
+                      <th onClick={() => handleSort('tasks_completed')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Završeni zadaci {sortField === 'tasks_completed' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                      <th onClick={() => handleSort('lines_processed')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Obrađene stavke {sortField === 'lines_processed' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                      <th onClick={() => handleSort('total_quantity')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Ukupna količina {sortField === 'total_quantity' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                      <th onClick={() => handleSort('time_spent')} style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: colors.brandYellow, cursor: 'pointer', userSelect: 'none' }}>Utrošeno vreme {sortField === 'time_spent' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {getSortedAndPaginatedData().map((team, idx) => (
                       <tr key={team.team_id} style={{
-                        borderBottom: '1px solid #f3f4f6',
-                        background: idx % 2 === 0 ? 'white' : '#fafbfc',
+                        borderBottom: '1px solid rgba(148,163,184,0.1)',
+                        background: idx % 2 === 0 ? 'rgba(15,23,42,0.4)' : 'rgba(15,23,42,0.2)',
                       }}>
-                        <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', fontWeight: '500' }}>{team.team_name}</td>
-                        <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', textAlign: 'center' }}>{team.tasks_completed}</td>
-                        <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', textAlign: 'center' }}>{team.lines_processed}</td>
-                        <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1f2937', textAlign: 'center', fontWeight: '500' }}>{team.total_quantity}</td>
-                        <td style={{ padding: '16px 20px', fontSize: '14px', color: '#6b7280', textAlign: 'center' }}>{formatDuration(team.time_spent)}</td>
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, fontWeight: '500' }}>{team.team_name}</td>
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, textAlign: 'center' }}>{team.tasks_completed}</td>
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, textAlign: 'center' }}>{team.lines_processed}</td>
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: colors.textPrimary, textAlign: 'center', fontWeight: '500' }}>{team.total_quantity}</td>
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{formatDuration(team.time_spent)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -833,21 +875,21 @@ const ReportsPage: React.FC = () => {
             )}
             {/* Pagination */}
             {teams.length > 0 && (
-              <div style={{ padding: '20px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '20px', borderTop: '1px solid rgba(148,163,184,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: '#6b7280' }}>Page size:</span>
-                  <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} style={{ padding: '6px 10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}>
+                  <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Veličina stranice:</span>
+                  <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} style={{ padding: '6px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: '8px', fontSize: '13px', color: colors.textPrimary }}>
                     <option value={10}>10</option>
                     <option value={25}>25</option>
                     <option value={50}>50</option>
                     <option value={100}>100</option>
                   </select>
-                  <span style={{ fontSize: '14px', color: '#6b7280', marginLeft: '16px' }}>Showing {Math.min((currentPage - 1) * pageSize + 1, teams.length)}-{Math.min(currentPage * pageSize, teams.length)} of {teams.length}</span>
+                  <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginLeft: '16px' }}>Prikazano {Math.min((currentPage - 1) * pageSize + 1, teams.length)}-{Math.min(currentPage * pageSize, teams.length)} od {teams.length}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} style={{ padding: '8px 12px', background: currentPage === 1 ? '#f3f4f6' : 'white', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
-                  <span style={{ padding: '8px 12px', fontSize: '13px', color: '#374151' }}>Page {currentPage} of {getTotalPages()}</span>
-                  <button disabled={currentPage >= getTotalPages()} onClick={() => setCurrentPage(currentPage + 1)} style={{ padding: '8px 12px', background: currentPage >= getTotalPages() ? '#f3f4f6' : 'white', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', cursor: currentPage >= getTotalPages() ? 'not-allowed' : 'pointer' }}>Next</button>
+                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} style={{ padding: '8px 12px', background: currentPage === 1 ? 'rgba(15,23,42,0.5)' : 'rgba(250,204,21,0.1)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: '8px', fontSize: '13px', color: currentPage === 1 ? 'rgba(255,255,255,0.3)' : colors.brandYellow, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 600 }}>Prethodna</button>
+                  <span style={{ padding: '8px 12px', fontSize: '13px', color: colors.textPrimary }}>Stranica {currentPage} od {getTotalPages()}</span>
+                  <button disabled={currentPage >= getTotalPages()} onClick={() => setCurrentPage(currentPage + 1)} style={{ padding: '8px 12px', background: currentPage >= getTotalPages() ? 'rgba(15,23,42,0.5)' : 'rgba(250,204,21,0.1)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: '8px', fontSize: '13px', color: currentPage >= getTotalPages() ? 'rgba(255,255,255,0.3)' : colors.brandYellow, cursor: currentPage >= getTotalPages() ? 'not-allowed' : 'pointer', fontWeight: 600 }}>Sledeća</button>
                 </div>
               </div>
             )}
@@ -864,7 +906,7 @@ const ReportsPage: React.FC = () => {
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0,0,0,0.5)',
+              background: 'rgba(0,0,0,0.75)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -875,22 +917,23 @@ const ReportsPage: React.FC = () => {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: 'white',
+                background: 'rgba(15,23,42,0.95)',
+                border: '1px solid rgba(148,163,184,0.25)',
                 borderRadius: '16px',
                 padding: '32px',
                 maxWidth: '800px',
                 width: '100%',
                 maxHeight: '90vh',
                 overflowY: 'auto',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '24px' }}>
                 <div>
-                  <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#1a1a1a', marginBottom: '8px' }}>
-                    Task Details
+                  <h2 style={{ fontSize: '24px', fontWeight: '600', color: colors.brandYellow, marginBottom: '8px' }}>
+                    Detalji zadatka
                   </h2>
-                  <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
                     {selectedTask.task_type.replace('_', ' ')} - {selectedTask.document_id}
                   </p>
                 </div>
@@ -898,29 +941,29 @@ const ReportsPage: React.FC = () => {
                   <button
                     onClick={handlePrintDetails}
                     style={{
-                      background: '#2563eb',
+                      background: colors.brandYellow,
                       border: 'none',
                       borderRadius: '8px',
                       padding: '8px 16px',
                       cursor: 'pointer',
                       fontSize: '14px',
-                      fontWeight: '500',
-                      color: 'white',
+                      fontWeight: '600',
+                      color: '#000',
                     }}
                   >
-                    Print
+                    Štampaj
                   </button>
                   <button
                     onClick={() => setShowDetailsModal(false)}
                     style={{
-                      background: '#f3f4f6',
-                      border: 'none',
+                      background: 'rgba(15,23,42,0.5)',
+                      border: '1px solid rgba(148,163,184,0.35)',
                       borderRadius: '8px',
                       width: '36px',
                       height: '36px',
                       cursor: 'pointer',
                       fontSize: '20px',
-                      color: '#6b7280',
+                      color: 'rgba(255,255,255,0.6)',
                     }}
                   >
                     ×
@@ -929,7 +972,8 @@ const ReportsPage: React.FC = () => {
               </div>
 
               <div style={{
-                background: '#f9fafb',
+                background: 'rgba(15,23,42,0.5)',
+                border: '1px solid rgba(148,163,184,0.15)',
                 padding: '20px',
                 borderRadius: '12px',
                 marginBottom: '24px',
@@ -938,35 +982,35 @@ const ReportsPage: React.FC = () => {
                 gap: '16px',
               }}>
                 <div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Date/Time</div>
-                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{formatDate(selectedTask.date)}</div>
+                  <div style={{ fontSize: '12px', color: colors.brandYellow, marginBottom: '4px', fontWeight: '600' }}>Datum/Vreme</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: colors.textPrimary }}>{formatDate(selectedTask.date)}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Worker</div>
-                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{selectedTask.worker}</div>
+                  <div style={{ fontSize: '12px', color: colors.brandYellow, marginBottom: '4px', fontWeight: '600' }}>Radnik</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: colors.textPrimary }}>{selectedTask.worker}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Items Count</div>
-                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{selectedTask.items_count}</div>
+                  <div style={{ fontSize: '12px', color: colors.brandYellow, marginBottom: '4px', fontWeight: '600' }}>Broj stavki</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: colors.textPrimary }}>{selectedTask.items_count}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total Quantity</div>
-                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{selectedTask.quantity}</div>
+                  <div style={{ fontSize: '12px', color: colors.brandYellow, marginBottom: '4px', fontWeight: '600' }}>Ukupna količina</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: colors.textPrimary }}>{selectedTask.quantity}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Duration</div>
-                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{formatDuration(selectedTask.duration)}</div>
+                  <div style={{ fontSize: '12px', color: colors.brandYellow, marginBottom: '4px', fontWeight: '600' }}>Trajanje</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: colors.textPrimary }}>{formatDuration(selectedTask.duration)}</div>
                 </div>
               </div>
 
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '16px' }}>
-                Item Breakdown
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: colors.brandYellow, marginBottom: '16px' }}>
+                Pregled stavki
               </h3>
 
-              <div style={{ background: '#fafbfc', borderRadius: '12px', padding: '16px' }}>
+              <div style={{ background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(148,163,184,0.15)', borderRadius: '12px', padding: '16px' }}>
                 <pre style={{
                   fontSize: '13px',
-                  color: '#374151',
+                  color: 'rgba(255,255,255,0.8)',
                   lineHeight: '1.6',
                   margin: 0,
                   whiteSpace: 'pre-wrap',
