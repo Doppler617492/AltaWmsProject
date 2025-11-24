@@ -931,8 +931,8 @@ export class WorkforceService {
   }
 
   async assignShift(actor: { id: number; role: string }, body: { user_id: number; shift_type: string }) {
-    if (!['admin', 'sef_magacina'].includes(actor.role)) {
-      throw new ForbiddenException('Samo admin/šef magacina može menjati smene.');
+    if (!['admin', 'sef_magacina', 'menadzer'].includes(actor.role)) {
+      throw new ForbiddenException('Samo admin/šef magacina/menadžer može menjati smene.');
     }
     if (!body || !body.user_id || !['PRVA','DRUGA','OFF'].includes(body.shift_type)) {
       throw new BadRequestException('Neispravan zahtev');

@@ -37,8 +37,8 @@ export class WorkforceController {
 
   @Post('shift-assign')
   async assign(@Req() req: any, @Body() body: { user_id: number; shift_type: string }) {
-    // Only admin and sef_magacina can assign
-    this.ensureRole(req, ['admin','sef_magacina']);
+    // Only admin, sef_magacina and menadzer can assign
+    this.ensureRole(req, ['admin','sef_magacina','menadzer']);
     return this.service.assignShift({ id: req.user?.id, role: req.user?.role }, body);
   }
 
