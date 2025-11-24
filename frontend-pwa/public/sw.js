@@ -1,5 +1,5 @@
 /* PWA Service Worker - Offline support and caching */
-const CACHE_NAME = 'alta-wms-v1';
+const CACHE_NAME = 'alta-wms-v2';
 const URLS_TO_CACHE = [
   '/',
   '/manifest.json',
