@@ -159,11 +159,13 @@ export class CunguSyncService {
           try {
             const importBody = {
               order_number: doc.documentNumber,
+              // customer_name = main warehouse destination (Primalac1)
               customer_name: doc.primaryDestination || doc.secondaryDestination || 'Cungu Import',
               issuer_name: doc.sourceLocation,
               responsible_person: doc.responsiblePerson,
               document_date: doc.documentDate,
-              store_name: doc.primaryDestination || doc.secondaryDestination,
+              // store_name = actual store destination (Primalac2) - THIS IS THE IMPORTANT ONE!
+              store_name: doc.secondaryDestination || doc.primaryDestination,
               lines: doc.lines.map(line => ({
                 item_sku: line.sku,
                 item_name: line.name,

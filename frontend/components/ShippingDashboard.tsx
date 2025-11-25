@@ -405,6 +405,12 @@ function ActiveOrders() {
                   <strong>{summaryValue(detail.customer_name)}</strong>
                 </div>
                 <div style={shippingModalStyles.sectionRow}>
+                  <span>Prodavnica</span>
+                  <strong style={{ color: colors.brandYellow }}>
+                    {summaryValue(detail.store_name)}
+                  </strong>
+                </div>
+                <div style={shippingModalStyles.sectionRow}>
                   <span>Status</span>
                   <span
                     style={{
@@ -768,6 +774,7 @@ function ActiveOrders() {
               </th>
               <th style={th}>Broj</th>
               <th style={th}>Kupac</th>
+              <th style={th}>Prodavnica</th>
               <th style={th}>Status</th>
               <th style={th}>Kreirao</th>
               <th style={th}>Radnik</th>
@@ -790,6 +797,9 @@ function ActiveOrders() {
                 </td>
                 <td style={td}>{r.order_number}</td>
                 <td style={td}>{r.customer_name}</td>
+                <td style={td}>
+                  <strong style={{ color: colors.brandYellow }}>{r.store_name || '-'}</strong>
+                </td>
                 <td style={td}>{renderShippingStatusBadge(r.status)}</td>
                 <td style={td}>{r.created_by_name||'-'}</td>
                 <td style={td}>{r.assigned_user_name||'-'}</td>
