@@ -13,6 +13,7 @@ import { ShippingOrder } from '../entities/shipping-order.entity';
 import { SkartDocument, SkartStatus } from '../skart/entities/skart-document.entity';
 import { PovracajDocument, PovracajStatus } from '../povracaj/entities/povracaj-document.entity';
 import { AuditLog } from '../entities/audit-log.entity';
+import { Team } from '../entities/team.entity';
 
 function startOfToday(): Date {
   const d = new Date(); d.setHours(0,0,0,0); return d;
@@ -33,6 +34,7 @@ export class DashboardService {
     @InjectRepository(SkartDocument) private skartRepo: Repository<SkartDocument>,
     @InjectRepository(PovracajDocument) private povracajRepo: Repository<PovracajDocument>,
     @InjectRepository(AuditLog) private auditRepo: Repository<AuditLog>,
+    @InjectRepository(Team) private teamRepo: Repository<Team>,
   ) {}
 
   async getOverview() {
@@ -265,6 +267,13 @@ export class DashboardService {
       : [];
     const userMap = new Map(users.map(u => [u.id, u]));
 
+    // Get team details for Team-related logs
+    const teamIds = [...new Set(logs.filter(l => l.entity === 'Team' && l.entity_id).map(l => l.entity_id))];
+    const teams = teamIds.length > 0
+      ? await this.teamRepo.find({ where: { id: In(teamIds) } })
+      : [];
+    const teamMap = new Map(teams.map(t => [t.id, t]));
+
     // Format events with user information
     const events = logs.map(log => {
       const translateAction = (action: string): string => {
@@ -318,6 +327,19 @@ export class DashboardService {
         }
       }
 
+      // Get team info if this is a Team entity event
+      let teamInfo = null;
+      if (log.entity === 'Team' && log.entity_id) {
+        const team = teamMap.get(log.entity_id);
+        if (team) {
+          teamInfo = {
+            id: team.id,
+            name: (team as any).name,
+            logo: (team as any).logo || '👥',
+          };
+        }
+      }
+
       return {
         id: log.id,
         entity: log.entity,
@@ -329,6 +351,7 @@ export class DashboardService {
           name: (user as any).full_name || user.name || user.username,
           role: user.role,
         } : null,
+        team: teamInfo,
         payload: log.payload,
         created_at: log.created_at,
       };

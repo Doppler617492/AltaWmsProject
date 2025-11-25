@@ -17,7 +17,13 @@ export class TeamsService {
     if (!name?.trim()) throw new BadRequestException('Naziv tima je obavezan');
     const existing = await this.teamRepo.findOne({ where: { name } });
     if (existing) throw new BadRequestException('Tim sa tim imenom već postoji');
-    const team = this.teamRepo.create({ name });
+    
+    // Assign default emoji logo based on team count
+    const count = await this.teamRepo.count();
+    const logos = ['🚀', '⚡', '🔥', '💎', '⭐', '🎯', '💪', '🏆', '⚙️', '🌟'];
+    const defaultLogo = logos[count % logos.length];
+    
+    const team = this.teamRepo.create({ name, logo: defaultLogo } as any);
     return this.teamRepo.save(team);
   }
 

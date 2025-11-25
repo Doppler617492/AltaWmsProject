@@ -16,6 +16,7 @@ import { ShippingOrder } from '../entities/shipping-order.entity';
 import { SkartDocument, SkartStatus } from '../skart/entities/skart-document.entity';
 import { PovracajDocument } from '../povracaj/entities/povracaj-document.entity';
 import { AuditLog } from '../entities/audit-log.entity';
+import { Team } from '../entities/team.entity';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AuditLog } from '../entities/audit-log.entity';
       SkartDocument,
       PovracajDocument,
       AuditLog,
+      Team,
     ]),
   ],
   controllers: [DashboardController],

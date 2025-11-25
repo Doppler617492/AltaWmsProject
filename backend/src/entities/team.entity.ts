@@ -9,6 +9,9 @@ export class Team {
   @Column({ type: 'varchar', length: 128, unique: true })
   name: string;
 
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  logo: string | null;
+
   @Column({ type: 'boolean', default: true })
   is_active: boolean;
 

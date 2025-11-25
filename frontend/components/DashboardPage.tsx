@@ -407,7 +407,12 @@ export default function DashboardPage() {
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px', color: 'rgba(255,255,255,0.8)' }}>
-                      {event.description || '—'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {event.team && (
+                          <span style={{ fontSize: 20 }}>{event.team.logo}</span>
+                        )}
+                        <span>{event.description || '—'}</span>
+                      </div>
                     </td>
                   </tr>
                 ))}
