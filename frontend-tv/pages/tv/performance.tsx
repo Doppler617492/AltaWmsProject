@@ -3,8 +3,9 @@ import { fetchOverview } from '../../src/lib/api';
 import { perfSocket } from '../../src/lib/socket';
 
 type Split = { box_assigned:number; box_completed:number; items_assigned:number; items_completed:number };
-type Worker = { name:string; team:string; shift?: string|null; receiving: Split; shipping: Split };
+type Worker = { name:string; team:string; shift?: string|null; user_id?:number; active_team_task_id?:number|null; team_members?:string[]; receiving: Split; shipping: Split };
 type Team = { team:string; box_assigned?:number; box_completed?:number; invoices_completed?:number; sku_completed?:number; putaway?:number; replenishment?:number; full_palets?:number; total_palets?:number };
+type TeamTaskGroup = { task_id: number; team_name: string; members: string[]; activeOrders: number; remainingItems: number; progress: number };
 
 export default function Wallboard(){
   const [data, setData] = useState<{ workers: Worker[]; teams: Team[]; refresh_interval: number; server_time: string }|null>(null);
@@ -51,6 +52,29 @@ export default function Wallboard(){
     return stats;
   }, [data?.workers]);
 
+  // Calculate unique active tasks (counting team tasks only once)
+  const activeTasksCount = useMemo(() => {
+    const workers = data?.workers || [];
+    const teamTaskIds = new Set<number>();
+    let individualTasksCount = 0;
+
+    workers.forEach(w => {
+      const ordersAssigned = (w.receiving.box_assigned || 0) + (w.shipping.box_assigned || 0);
+      const ordersDone = (w.receiving.box_completed || 0) + (w.shipping.box_completed || 0);
+      const activeTasks = Math.max(0, ordersAssigned - ordersDone);
+      
+      if (activeTasks > 0) {
+        if (w.active_team_task_id && w.team_members && w.team_members.length > 1) {
+          teamTaskIds.add(w.active_team_task_id);
+        } else {
+          individualTasksCount += activeTasks;
+        }
+      }
+    });
+
+    return teamTaskIds.size + individualTasksCount;
+  }, [data?.workers]);
+
   return (
     <div style={styles.root}>
       <TopHero countdown={countdown} socketOk={socketOk} serverTime={data?.server_time} />
@@ -70,7 +94,7 @@ export default function Wallboard(){
         />
         <SummaryCard
           title="Aktivni zadaci"
-          primary={`${fmt0(Math.max(0, combinedTotals.ordersAssigned - combinedTotals.ordersDone))}`}
+          primary={`${fmt0(activeTasksCount)}`}
           secondary="trenutno u radu"
           accent="#38bdf8"
         />
@@ -461,57 +485,118 @@ function fmt0(value: number) {
 }
 
 function WorkInProgressTable({ rows }: { rows: Worker[] }) {
-  const tasks = rows
-    .map((w) => {
-      const ordersAssigned = (w.receiving.box_assigned || 0) + (w.shipping.box_assigned || 0);
-      const ordersDone = (w.receiving.box_completed || 0) + (w.shipping.box_completed || 0);
-      const itemsAssigned = (w.receiving.items_assigned || 0) + (w.shipping.items_assigned || 0);
-      const itemsDone = (w.receiving.items_completed || 0) + (w.shipping.items_completed || 0);
-      const activeOrders = Math.max(0, ordersAssigned - ordersDone);
-      const remainingItems = Math.max(0, itemsAssigned - itemsDone);
-      const progress = ordersAssigned > 0 ? Math.min(1, ordersDone / ordersAssigned) : 0;
-      return {
+  // Group workers by active team tasks
+  const teamTasksMap = new Map<number, TeamTaskGroup>();
+  const individualTasks: Array<{ name: string; team: string; activeOrders: number; remainingItems: number; progress: number }> = [];
+
+  rows.forEach((w) => {
+    const ordersAssigned = (w.receiving.box_assigned || 0) + (w.shipping.box_assigned || 0);
+    const ordersDone = (w.receiving.box_completed || 0) + (w.shipping.box_completed || 0);
+    const itemsAssigned = (w.receiving.items_assigned || 0) + (w.shipping.items_assigned || 0);
+    const itemsDone = (w.receiving.items_completed || 0) + (w.shipping.items_completed || 0);
+    const activeOrders = Math.max(0, ordersAssigned - ordersDone);
+    const remainingItems = Math.max(0, itemsAssigned - itemsDone);
+    const progress = ordersAssigned > 0 ? Math.min(1, ordersDone / ordersAssigned) : 0;
+
+    if (activeOrders === 0 && remainingItems === 0) return;
+
+    // Check if this worker is part of an active team task
+    if (w.active_team_task_id && w.team_members && w.team_members.length > 1) {
+      const taskId = w.active_team_task_id;
+      if (!teamTasksMap.has(taskId)) {
+        teamTasksMap.set(taskId, {
+          task_id: taskId,
+          team_name: w.team,
+          members: w.team_members,
+          activeOrders,
+          remainingItems,
+          progress,
+        });
+      }
+    } else {
+      // Individual task
+      individualTasks.push({
         name: w.name,
         team: w.team,
         activeOrders,
         remainingItems,
         progress,
-      };
-    })
-    .filter(t => t.activeOrders > 0 || t.remainingItems > 0)
-    .sort((a, b) => {
-      if (b.activeOrders !== a.activeOrders) return b.activeOrders - a.activeOrders;
-      if (b.remainingItems !== a.remainingItems) return b.remainingItems - a.remainingItems;
-      return a.name.localeCompare(b.name);
-    });
+      });
+    }
+  });
 
-  if (!tasks.length) {
+  const teamTasks = Array.from(teamTasksMap.values());
+  const allTasks = [...teamTasks, ...individualTasks];
+
+  if (!allTasks.length) {
     return <div style={{ color: '#9ca3af', fontSize: 16, padding: 24 }}>Trenutno nema aktivnih zadataka.</div>;
   }
+
+  // Sort: team tasks first (by active orders desc), then individual tasks
+  allTasks.sort((a, b) => {
+    const aIsTeam = 'task_id' in a;
+    const bIsTeam = 'task_id' in b;
+    if (aIsTeam && !bIsTeam) return -1;
+    if (!aIsTeam && bIsTeam) return 1;
+    if (b.activeOrders !== a.activeOrders) return b.activeOrders - a.activeOrders;
+    if (b.remainingItems !== a.remainingItems) return b.remainingItems - a.remainingItems;
+    const aName = 'team_name' in a ? a.team_name : a.name;
+    const bName = 'team_name' in b ? b.team_name : b.name;
+    return aName.localeCompare(bName);
+  });
 
   return (
     <table style={styles.wipTable}>
       <tbody>
-        {tasks.map((row, idx) => {
-          const pct = Math.round((row.progress || 0) * 100);
-          return (
-            <tr key={row.name} style={styles.wipRow}>
-              <td style={styles.wipNameCell}>
-                <span style={styles.rankName}>{row.name}</span>
-                <span style={styles.rankTeam}>{row.team}</span>
-                <span style={styles.wipBadge}>
-                  {row.activeOrders} naloga • {row.remainingItems} artikala
-                </span>
-              </td>
-              <td style={styles.wipMetricsCell}>
-                <div style={{ fontSize: 22 }}>{pct}%</div>
-                <div style={styles.progressTrack}>
-                  <div style={{ ...styles.progressFill, width: `${pct}%` }} />
-                </div>
-                <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>Završeno</div>
-              </td>
-            </tr>
-          );
+        {allTasks.map((task, idx) => {
+          const pct = Math.round((task.progress || 0) * 100);
+          const isTeamTask = 'task_id' in task;
+          
+          if (isTeamTask) {
+            // Team task display
+            const teamTask = task as TeamTaskGroup;
+            return (
+              <tr key={`team-${teamTask.task_id}`} style={styles.wipRow}>
+                <td style={styles.wipNameCell}>
+                  <span style={{ ...styles.rankName, color: '#facc15' }}>{teamTask.team_name}</span>
+                  <span style={{ fontSize: 14, color: '#94a3b8', marginTop: 4 }}>
+                    {teamTask.members.join(' • ')}
+                  </span>
+                  <span style={styles.wipBadge}>
+                    {teamTask.activeOrders} {teamTask.activeOrders === 1 ? 'nalog' : 'naloga'} • {teamTask.remainingItems} artikala
+                  </span>
+                </td>
+                <td style={styles.wipMetricsCell}>
+                  <div style={{ fontSize: 22 }}>{pct}%</div>
+                  <div style={styles.progressTrack}>
+                    <div style={{ ...styles.progressFill, width: `${pct}%` }} />
+                  </div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>Završeno</div>
+                </td>
+              </tr>
+            );
+          } else {
+            // Individual task display
+            const individualTask = task as { name: string; team: string; activeOrders: number; remainingItems: number; progress: number };
+            return (
+              <tr key={`worker-${individualTask.name}`} style={styles.wipRow}>
+                <td style={styles.wipNameCell}>
+                  <span style={styles.rankName}>{individualTask.name}</span>
+                  <span style={styles.rankTeam}>{individualTask.team}</span>
+                  <span style={styles.wipBadge}>
+                    {individualTask.activeOrders} {individualTask.activeOrders === 1 ? 'nalog' : 'naloga'} • {individualTask.remainingItems} artikala
+                  </span>
+                </td>
+                <td style={styles.wipMetricsCell}>
+                  <div style={{ fontSize: 22 }}>{pct}%</div>
+                  <div style={styles.progressTrack}>
+                    <div style={{ ...styles.progressFill, width: `${pct}%` }} />
+                  </div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>Završeno</div>
+                </td>
+              </tr>
+            );
+          }
         })}
       </tbody>
     </table>

@@ -9,6 +9,9 @@ export interface PerformanceWorkerDto {
   name: string;
   team: string;
   shift?: string | null;
+  user_id?: number;
+  active_team_task_id?: number | null;
+  team_members?: string[];
   receiving: WorkerSplitDto;
   shipping: WorkerSplitDto;
 }

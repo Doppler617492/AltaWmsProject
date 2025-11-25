@@ -153,6 +153,9 @@ export class PerformanceService implements OnModuleInit, OnModuleDestroy {
         name: (u as any).full_name || (u as any).username || `User ${u.id}`,
         team: (u as any).team || 'Picking',
         shift: (u as any).shift || null,
+        user_id: u.id,
+        active_team_task_id: null,
+        team_members: [],
         receiving: { box_assigned: 0, box_completed: 0, items_assigned: 0, items_completed: 0 },
         shipping:  { box_assigned: 0, box_completed: 0, items_assigned: 0, items_completed: 0 },
       });
@@ -177,6 +180,7 @@ export class PerformanceService implements OnModuleInit, OnModuleDestroy {
       const type = (info as any).task_type as 'RECEIVING'|'SHIPPING';
       const taskId = (info as any).task_id as number;
       const policy = String((info as any).policy || 'ANY_DONE');
+      const teamId = (info as any).team_id || null;
       const assignees = assigneesMap.get(taskId) || [];
       if (!assignees.length) continue;
       if (type === 'RECEIVING' && !recDocSet.has(taskId)) continue;
@@ -185,13 +189,34 @@ export class PerformanceService implements OnModuleInit, OnModuleDestroy {
       const allDone = assignees.every(a => (a as any).status === 'DONE');
       const teamComplete = policy === 'ALL_DONE' ? allDone : anyDone;
 
+      // Track active team tasks (not yet completed)
+      const isActiveTeamTask = teamId && assignees.length > 1 && !teamComplete;
+      
       // Determine totals for this task
       const recAgg = type === 'RECEIVING' ? itemsByDoc.get(taskId) : undefined;
       const shipAgg = type === 'SHIPPING' ? itemsByOrder.get(taskId) : undefined;
 
+      // Collect team member names for active team tasks
+      const teamMemberNames: string[] = [];
+      if (isActiveTeamTask) {
+        for (const a of assignees) {
+          const userEntry = byUser.get(a.user_id);
+          if (userEntry) {
+            teamMemberNames.push(userEntry.name);
+          }
+        }
+      }
+
       for (const a of assignees) {
         const userEntry = byUser.get(a.user_id);
         if (!userEntry) continue;
+        
+        // Set active team task info for grouping in frontend
+        if (isActiveTeamTask && (a as any).status !== 'DONE') {
+          userEntry.active_team_task_id = taskId;
+          userEntry.team_members = teamMemberNames;
+        }
+        
         if (type === 'RECEIVING') {
           userEntry.receiving.box_assigned += 1;
           if (recAgg) {
