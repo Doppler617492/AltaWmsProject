@@ -1,10 +1,23 @@
 {
   "name": "alta-wms-backend",
-  "version": "0.1.0",
-  "description": "Alta WMS Backend API",
-  "author": "",
-  "private": true,
-  "license": "UNLICENSED",
+  "version": "2.1.0",
+  "description": "Alta WMS Backend API - Enterprise warehouse management system backend",
+  "author": "Alta WMS Team",
+  "private": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Doppler617492/AltaWmsProject.git"
+  },
+  "keywords": [
+    "warehouse",
+    "wms",
+    "inventory",
+    "logistics",
+    "erp",
+    "nestjs",
+    "typescript"
+  ],
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

@@ -1,7 +1,21 @@
 {
-  "name": "alta-wms-frontend",
-  "version": "0.1.0",
-  "private": true,
+  "name": "alta-wms-frontend-admin",
+  "version": "2.1.0",
+  "description": "Alta WMS Admin Panel - Desktop interface for warehouse management",
+  "author": "Alta WMS Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Doppler617492/AltaWmsProject.git"
+  },
+  "keywords": [
+    "warehouse",
+    "wms",
+    "admin-panel",
+    "nextjs",
+    "react"
+  ],
+  "private": false,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
