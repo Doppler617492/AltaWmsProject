@@ -41,6 +41,13 @@ services:
       ANALYTICS_PUSH_MAP: ${ANALYTICS_PUSH_MAP:-'{"assignee_id":"AssigneeId","task_type":"TaskType","task_id":"TaskId","user_id":"UserId","user_name":"UserName","status":"Status","started_at":"StartedAt","completed_at":"CompletedAt","duration_seconds":"DurationSec","policy":"Policy","team_id":"TeamId","document_number":"DocumentNumber","order_number":"OrderNumber","pallet_id":"PalletId","pushed_at":"PushedAt"}'}
       TV_KIOSK_TOKEN: ${TV_KIOSK_TOKEN}
       PERFORMANCE_REFRESH_INTERVAL: ${PERFORMANCE_REFRESH_INTERVAL:-30}
+      # Cungu/Pantheon Integration
+      CUNGU_API_ENABLED: ${CUNGU_API_ENABLED:-false}
+      CUNGU_API_URL: ${CUNGU_API_URL:-}
+      CUNGU_API_USERNAME: ${CUNGU_API_USERNAME:-}
+      CUNGU_API_PASSWORD: ${CUNGU_API_PASSWORD:-}
+      CUNGU_SYNC_PAGE_SIZE: ${CUNGU_SYNC_PAGE_SIZE:-500}
+      CUNGU_SHIPPING_METHOD: ${CUNGU_SHIPPING_METHOD:-GetIssueDocWMS}
     ports:
       - "8000:8000"
     depends_on:
