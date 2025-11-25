@@ -60,6 +60,47 @@ export class ShippingService {
     return '';
   }
 
+  /**
+   * Check if a user can access a shipping order.
+   * Returns true if:
+   * 1. User is directly assigned to the order, OR
+   * 2. User is a member of a team that has this order assigned as a team task
+   */
+  private async canUserAccessOrder(userId: number, orderId: number): Promise<boolean> {
+    // Check direct assignment
+    const order = await this.orders.findOne({ 
+      where: { id: orderId }, 
+      relations: ['assigned_user'] 
+    });
+    
+    if (order?.assigned_user?.id === userId) {
+      return true;
+    }
+
+    // Check team assignment
+    const taskInfo = await this.taskAssignmentInfo.findOne({
+      where: { 
+        task_type: 'SHIPPING' as any, 
+        task_id: orderId 
+      }
+    });
+
+    if (!taskInfo || !taskInfo.team_id) {
+      return false;
+    }
+
+    // Check if user is a member of the assigned team
+    const membership = await this.teamMembers.findOne({
+      where: {
+        team_id: taskInfo.team_id,
+        user_id: userId,
+        is_active: true,
+      } as any
+    });
+
+    return !!membership;
+  }
+
   private parseDocumentDate(value?: string | Date | null): Date | null {
     if (!value) return null;
     if (value instanceof Date) return value;
@@ -556,7 +597,12 @@ export class ShippingService {
   async pickLine(lineId: number, userId: number, picked_qty: number, from_location_code: string, reason: string | null = null) {
     const line = await this.lines.findOne({ where: { id: lineId }, relations: ['order', 'item', 'order.assigned_user'] });
     if (!line) throw new NotFoundException('Line not found');
-    if (!line.order || !line.order.assigned_user || line.order.assigned_user.id !== userId) throw new ForbiddenException('Not your order');
+    
+    // Check authorization: user must be either directly assigned OR part of a team assigned to this order
+    const hasAccess = await this.canUserAccessOrder(userId, line.order.id);
+    if (!hasAccess) {
+      throw new ForbiddenException('Not authorized to work on this order');
+    }
 
     const requestedQty = Number(line.requested_qty || 0);
     const currentPicked = Number(line.picked_qty || 0);
