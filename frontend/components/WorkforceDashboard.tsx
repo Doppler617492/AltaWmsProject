@@ -15,7 +15,7 @@ type Worker = {
   oldest_putaway_age?: number;
   open_shipping_orders?: number;
   shipping_oldest_age?: number;
-  active_shipping_orders?: { id: number; order_number: string; customer_name: string; status: string; percent_complete: number; started_at: string }[];
+  active_shipping_orders?: { id: number; order_number: string; customer_name: string; store_name?: string; status: string; percent_complete: number; started_at: string }[];
   open_skart_count?: number;
   open_povracaj_count?: number;
   active_receivings: { document_number: string; status: string; supplier_name: string; percent_complete: number; started_at: string }[];
@@ -1088,7 +1088,15 @@ function AssignShippingModal({ userId, onClose }: { userId: number; onClose: () 
             return (
               <div key={o.id} style={{ borderBottom:`1px solid ${colors.borderCard}`, padding:'8px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <div>
-                  <div style={{ fontWeight:600 }}>{o.order_number} · {o.customer_name || ''} {assignedChip}</div>
+                  <div style={{ fontWeight:600 }}>
+                    {o.order_number} · {o.customer_name || ''}
+                    {o.store_name && (
+                      <span style={{ marginLeft: 8, color: colors.brandYellow, fontWeight: 700 }}>
+                        → {o.store_name}
+                      </span>
+                    )}
+                    {assignedChip}
+                  </div>
                   <div style={{ fontSize:12, color: colors.textPrimary }}>{String(o.status||'').toUpperCase()}{meta ? ` · ${meta}` : ''}</div>
                 </div>
                 <button style={btn} onClick={()=>assign(o.id)}>Dodijeli ovom radniku</button>
