@@ -1407,12 +1407,12 @@ function MultiAssignModal({ onClose, initialType }: { onClose: () => void; initi
 function Modal({ title, children, onClose }: any) {
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-      <div style={{ background: 'linear-gradient(180deg,#111522,#090b14)', color: colors.textPrimary, border:'1px solid rgba(255,255,255,0.08)', borderRadius:24, width:'95%', maxWidth:900, boxShadow:'0 25px 55px rgba(0,0,0,0.65)' }}>
+      <div style={{ background: 'linear-gradient(180deg,#111522,#090b14)', color: colors.textPrimary, border:'1px solid rgba(255,255,255,0.08)', borderRadius:24, width:'95%', maxWidth:900, maxHeight:'85vh', display:'flex', flexDirection:'column', boxShadow:'0 25px 55px rgba(0,0,0,0.65)' }}>
         <div style={{ padding:16, display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ fontWeight:700, fontSize:18 }}>{title}</div>
           <button onClick={onClose} style={{ background:'transparent', border:'none', color:'#fff', fontSize:22, cursor:'pointer' }}>×</button>
         </div>
-        <div style={{ padding:20 }}>{children}</div>
+        <div style={{ padding:20, overflowY:'auto', flex:1 }}>{children}</div>
         <div style={{ padding:16, textAlign:'right', borderTop:'1px solid rgba(255,255,255,0.08)' }}>
           <button style={btn} onClick={onClose}>Zatvori</button>
         </div>
