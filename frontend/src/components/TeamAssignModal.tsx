@@ -147,6 +147,11 @@ export function TeamAssignModal({
                 }
                 const q = query.trim().toLowerCase();
                 if (!q) return true;
+                // For shipping, also include store_name in search
+                if (type === 'SHIPPING' && it.store_name) {
+                  const storeName = it.store_name.toLowerCase();
+                  return label.toLowerCase().includes(q) || meta.toLowerCase().includes(q) || storeName.includes(q);
+                }
                 return label.toLowerCase().includes(q) || meta.toLowerCase().includes(q);
               }).map((it:any)=>{
                 let label: string;
@@ -160,6 +165,10 @@ export function TeamAssignModal({
                   label = it.order_number || `#${it.id}`;
                   meta = it.customer_name || '';
                   taskId = it.id;
+                  // Include store name for shipping orders
+                  if (it.store_name) {
+                    meta = meta ? `${meta} → ${it.store_name}` : it.store_name;
+                  }
                 } else if (type==='SKART') {
                   label = it.uid || `#${it.id}`;
                   meta = it.storeName || it.store_name || '';
