@@ -63,9 +63,10 @@ export class CunguShippingService {
   private buildPayload(method: string, filters: ShippingSyncFilters) {
     const cunguFilters: Record<string, any> = filters.rawFilters ? { ...filters.rawFilters } : {};
 
-    if (filters.dateFrom && filters.dateTo) {
-      cunguFilters['m.adDate'] = { operator: 'between', value: [filters.dateFrom, filters.dateTo] };
-    } else if (filters.dateFrom) {
+    // For date filtering, use >= with dateFrom only
+    // The API doesn't reliably support 'between' for GetIssueDocWMS
+    // Client-side filtering can handle the date range on the response
+    if (filters.dateFrom) {
       cunguFilters['m.adDate'] = { operator: '>=', value: filters.dateFrom };
     }
 

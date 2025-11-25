@@ -123,19 +123,26 @@ export class CunguSyncService {
     if (request.shipping) {
       const docs = await this.shippingService.fetchDocuments(request.shipping);
       
-      // Filter by warehouses client-side (NasObjekat field contains warehouse name)
+      // Filter client-side
       let filteredDocs = docs;
       
+      // Filter by date range (dateTo) client-side since API only supports >= operator reliably
+      if (request.shipping.dateTo) {
+        filteredDocs = filteredDocs.filter(doc => doc.documentDate <= request.shipping.dateTo);
+        this.logger.log(`Filtered by dateTo: ${request.shipping.dateTo}`);
+      }
+      
+      // Filter by warehouses (NasObjekat field contains warehouse name)
       if (request.shipping.warehouses && Array.isArray(request.shipping.warehouses) && request.shipping.warehouses.length > 0) {
         // Filter by multiple warehouses
-        filteredDocs = docs.filter(doc => {
+        filteredDocs = filteredDocs.filter(doc => {
           const sourceLower = (doc.sourceLocation || '').toLowerCase();
           return request.shipping.warehouses.some(wh => sourceLower.includes(wh.toLowerCase()));
         });
         this.logger.log(`Filtered shipping documents by warehouses: ${request.shipping.warehouses.join(', ')}`);
       } else if (request.shipping.warehouse) {
         // Legacy single warehouse filter
-        filteredDocs = docs.filter(doc => 
+        filteredDocs = filteredDocs.filter(doc => 
           doc.sourceLocation?.toLowerCase().includes(request.shipping.warehouse.toLowerCase())
         );
         this.logger.log(`Filtered shipping documents by warehouse: ${request.shipping.warehouse}`);
