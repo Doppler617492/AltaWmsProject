@@ -731,16 +731,16 @@ function ActiveOrders() {
           style={{
             background: syncing 
               ? 'transparent'
-              : 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+              : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
             border: syncing ? `1px solid ${colors.borderDefault}` : 'none',
-            color: syncing ? colors.textSecondary : '#fff',
+            color: syncing ? colors.textSecondary : '#000',
             padding: '8px 16px',
             borderRadius: 8,
             fontSize: 13,
             fontWeight: 700,
             cursor: syncing ? 'not-allowed' : 'pointer',
             opacity: syncing ? 0.6 : 1,
-            boxShadow: syncing ? 'none' : '0 4px 12px rgba(6, 182, 212, 0.3)',
+            boxShadow: syncing ? 'none' : '0 4px 12px rgba(251, 191, 36, 0.3)',
             transition: 'all 0.2s ease',
             display: 'flex',
             alignItems: 'center',
