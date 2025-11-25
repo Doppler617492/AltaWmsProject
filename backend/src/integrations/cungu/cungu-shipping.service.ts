@@ -26,7 +26,8 @@ export interface ShippingSyncFilters {
   dateTo?: string;
   docTypes?: string[];
   status?: string;
-  warehouse?: string;
+  warehouse?: string; // Legacy single warehouse
+  warehouses?: string[]; // Multiple warehouses
   rawFilters?: Record<string, any>;
 }
 

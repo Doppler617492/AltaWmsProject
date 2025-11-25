@@ -237,8 +237,8 @@ function ActiveOrders() {
   };
 
   const runManualSync = async () => {
-    // Sync last 7 days to catch any recently created documents
-    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    // Sync only last 1 day
+    const since = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const today = new Date().toISOString().slice(0, 10);
     
     try {
@@ -247,8 +247,8 @@ function ActiveOrders() {
         shipping: {
           dateFrom: since,
           dateTo: today,
-          // Fetch from all warehouses, not just Veleprodajni
-          // Backend will filter by NasObjekat field
+          // Only these warehouses
+          warehouses: ['Veleprodajni Magacin', 'Tranzitno skladiste'],
         },
         persist: true, // Auto-import documents
       });
@@ -273,10 +273,12 @@ function ActiveOrders() {
       } else {
         alert(
           `ℹ️ Nema novih otpremnica.\n\n` +
-          `Provereno je poslednjih 7 dana.\n` +
+          `Provereno je poslednjih 24 sata.\n` +
+          `Skladišta: Veleprodajni Magacin, Tranzitno skladiste\n\n` +
           `Ako očekujete nove dokumente, proverite:\n` +
           `• Da li su kreirani u Pantheon sistemu\n` +
-          `• Da li je datum dokumenta u poslednjih 7 dana`
+          `• Da li je datum dokumenta u poslednjih 24 sata\n` +
+          `• Da li su iz pravih skladišta`
         );
       }
       
@@ -746,7 +748,7 @@ function ActiveOrders() {
           }}
           onClick={runManualSync}
           disabled={syncing}
-          title="Uvuci nove otpremnice iz Pantheon sistema (poslednjih 7 dana)"
+          title="Uvuci nove otpremnice iz Pantheon sistema (samo iz Veleprodajni Magacin i Tranzitno skladiste, poslednji 1 dan)"
         >
           <span style={{ fontSize: 16 }}>{syncing ? '⏳' : '🔄'}</span>
           {syncing ? 'Sinhronizacija u toku…' : 'Sinhroniši Pantheon'}

@@ -122,12 +122,28 @@ export class CunguSyncService {
 
     if (request.shipping) {
       const docs = await this.shippingService.fetchDocuments(request.shipping);
-      // Filter by warehouse client-side if needed (NasObjekat field contains warehouse name)
-      const filteredDocs = request.shipping.warehouse
-        ? docs.filter(doc => doc.sourceLocation?.toLowerCase().includes(request.shipping.warehouse.toLowerCase()))
-        : docs;
+      
+      // Filter by warehouses client-side (NasObjekat field contains warehouse name)
+      let filteredDocs = docs;
+      
+      if (request.shipping.warehouses && Array.isArray(request.shipping.warehouses) && request.shipping.warehouses.length > 0) {
+        // Filter by multiple warehouses
+        filteredDocs = docs.filter(doc => {
+          const sourceLower = (doc.sourceLocation || '').toLowerCase();
+          return request.shipping.warehouses.some(wh => sourceLower.includes(wh.toLowerCase()));
+        });
+        this.logger.log(`Filtered shipping documents by warehouses: ${request.shipping.warehouses.join(', ')}`);
+      } else if (request.shipping.warehouse) {
+        // Legacy single warehouse filter
+        filteredDocs = docs.filter(doc => 
+          doc.sourceLocation?.toLowerCase().includes(request.shipping.warehouse.toLowerCase())
+        );
+        this.logger.log(`Filtered shipping documents by warehouse: ${request.shipping.warehouse}`);
+      }
+      
       result.shippingCount = filteredDocs.length;
-      this.logger.log(`Fetched ${filteredDocs.length} shipping documents from Cungu${request.shipping.warehouse ? ` (filtered by warehouse: ${request.shipping.warehouse})` : ''}`);
+      this.logger.log(`Fetched ${filteredDocs.length} shipping documents from Cungu (total found: ${docs.length})`);
+      
       
       // Persist documents if requested
       if (shouldPersist && filteredDocs.length > 0 && this.shippingServiceInternal) {
