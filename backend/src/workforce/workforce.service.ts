@@ -113,13 +113,13 @@ export class WorkforceService {
           }
         }
       } else if (body.type === 'SHIPPING') {
-        // Optionally move shipping order to PICKING (non-invasive if already in progress)
+        // Move shipping order to ASSIGNED when assigned to worker/team
         const so = await this.shippingRepo.findOne({ where: { id: body.task_id } as any });
         if (so) {
           const cur = String((so as any).status || '').toUpperCase();
-          if (cur !== 'PICKING' && cur !== 'STAGED' && cur !== 'LOADED' && cur !== 'CLOSED') {
-            (so as any).status = 'PICKING';
-            if (!(so as any).started_at) (so as any).started_at = now as any;
+          // Only change to ASSIGNED if in CREATED or DRAFT state
+          if (cur === 'CREATED' || cur === 'DRAFT') {
+            (so as any).status = 'ASSIGNED';
             await this.shippingRepo.save(so);
           }
         }
@@ -195,6 +195,29 @@ export class WorkforceService {
     row.status = 'IN_PROGRESS' as any;
     row.started_at = new Date();
     await this.assignRepo.save(row);
+    
+    // Change order status from ASSIGNED to PICKING when worker starts
+    try {
+      if (row.task_type === 'SHIPPING') {
+        const so = await this.shippingRepo.findOne({ where: { id: row.task_id } as any });
+        if (so && (so as any).status === 'ASSIGNED') {
+          (so as any).status = 'PICKING';
+          if (!(so as any).started_at) (so as any).started_at = new Date();
+          await this.shippingRepo.save(so);
+        }
+      } else if (row.task_type === 'RECEIVING') {
+        const doc = await this.docRepo.findOne({ where: { id: row.task_id } as any });
+        if (doc && String((doc as any).status || '').toLowerCase() === 'assigned') {
+          (doc as any).status = 'in_progress';
+          if (!(doc as any).started_at) (doc as any).started_at = new Date();
+          await this.docRepo.save(doc);
+        }
+      }
+    } catch (e) {
+      // Non-critical, log and continue
+      console.warn('Failed to update task status on assignee start:', e);
+    }
+    
     // fire-and-forget push
     this.analyticsPush.pushAssigneeRow(row.id).catch(()=>{});
     return { ok: true };

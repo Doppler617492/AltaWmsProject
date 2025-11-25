@@ -23,21 +23,18 @@ const PREDEFINED_STORES = [
 
 const shippingStatusMetaMap: Record<string, { label: string; bg: string; color: string }> = {
   DRAFT: { label: 'NACRT', bg: '#475569', color: '#f8fafc' },
+  CREATED: { label: 'KREIRAN', bg: '#fbbf24', color: '#000' },
+  ASSIGNED: { label: 'DODELJENO', bg: '#22c55e', color: '#fff' },
   PENDING: { label: 'ČEKA', bg: '#38bdf8', color: '#0f172a' },
-  PICKING: { label: 'U ODBIRU', bg: '#f59e0b', color: '#1f2937' },
+  PICKING: { label: 'U RADU', bg: '#f59e0b', color: '#1f2937' },
   PICKED: { label: 'ODABRANO', bg: '#4ade80', color: '#064e3b' },
   STAGED: { label: 'PRIPREMLJENO', bg: '#a855f7', color: '#fdf4ff' },
   LOADED: { label: 'UTOVARENO', bg: '#0ea5e9', color: '#022c4b' },
   CLOSED: { label: 'ZATVORENO', bg: '#94a3b8', color: '#0f172a' },
   CANCELLED: { label: 'OTKAZANO', bg: '#f87171', color: '#fff' },
-  ASSIGNED: { label: 'DODELJENO', bg: '#22c55e', color: '#fff' },
 };
 
-const getShippingStatusMeta = (status: string | null | undefined, isAssigned?: boolean) => {
-  // If assigned, show ASSIGNED status instead
-  if (isAssigned) {
-    return shippingStatusMetaMap['ASSIGNED'];
-  }
+const getShippingStatusMeta = (status: string | null | undefined) => {
   const key = (status || '').toUpperCase();
   return (
     shippingStatusMetaMap[key] || {
@@ -48,8 +45,8 @@ const getShippingStatusMeta = (status: string | null | undefined, isAssigned?: b
   );
 };
 
-const renderShippingStatusBadge = (status: string | null | undefined, isAssigned?: boolean) => {
-  const meta = getShippingStatusMeta(status, isAssigned);
+const renderShippingStatusBadge = (status: string | null | undefined) => {
+  const meta = getShippingStatusMeta(status);
   return (
     <span
       style={{
@@ -814,7 +811,7 @@ function ActiveOrders() {
                 <td style={td}>
                   <strong style={{ color: colors.brandYellow }}>{r.store_name || '-'}</strong>
                 </td>
-                <td style={td}>{renderShippingStatusBadge(r.status, !!(r.assigned_summary || r.assigned_team_name))}</td>
+                <td style={td}>{renderShippingStatusBadge(r.status)}</td>
                 <td style={td}>{r.created_by_name||'-'}</td>
                 <td style={td}>
                   {r.assigned_summary ? (

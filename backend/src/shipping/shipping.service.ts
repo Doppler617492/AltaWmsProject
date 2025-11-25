@@ -323,7 +323,7 @@ export class ShippingService {
   }
 
   async listActive() {
-    const list = await this.orders.find({ where: [{ status: 'PICKING' }, { status: 'STAGED' }, { status: 'LOADED' }, { status: 'CLOSED' }] as any, relations: ['lines', 'assigned_user', 'created_by', 'assigned_team'] });
+    const list = await this.orders.find({ where: [{ status: 'CREATED' }, { status: 'ASSIGNED' }, { status: 'PICKING' }, { status: 'STAGED' }, { status: 'LOADED' }, { status: 'CLOSED' }] as any, relations: ['lines', 'assigned_user', 'created_by', 'assigned_team'] });
     const ids = list.map(o => o.id);
     const assignmentMaps = await this.fetchAssignmentMaps(ids);
     return list.map(o => {
@@ -412,7 +412,7 @@ export class ShippingService {
     if (!orderIds.length) {
       return [];
     }
-    const statuses = ['PICKING', 'STAGED', 'LOADED', 'CLOSED'];
+    const statuses = ['CREATED', 'ASSIGNED', 'PICKING', 'STAGED', 'LOADED', 'CLOSED'];
     const list = await this.orders.createQueryBuilder('order')
       .leftJoinAndSelect('order.lines', 'lines')
       .leftJoinAndSelect('lines.item', 'lineItem')
@@ -1266,8 +1266,8 @@ export class ShippingService {
       }
       if (orderLines.length === 0) throw new Error('Nema validnih stavki');
       await this.lines.save(orderLines);
-      // Make visible under Active orders
-      savedOrder.status = 'PICKING';
+      // Make visible under Active orders with CREATED status
+      savedOrder.status = 'CREATED';
       await this.orders.save(savedOrder);
       const assigneeSet = new Set<number>();
       if (savedOrder.assigned_user_id) assigneeSet.add(savedOrder.assigned_user_id);

@@ -3,7 +3,7 @@ import { User } from './user.entity';
 import { ShippingOrderLine } from './shipping-order-line.entity';
 import { Team } from './team.entity';
 
-export type ShippingOrderStatus = 'DRAFT' | 'PICKING' | 'STAGED' | 'LOADED' | 'COMPLETED' | 'CLOSED' | 'ON_HOLD' | 'CANCELLED';
+export type ShippingOrderStatus = 'DRAFT' | 'CREATED' | 'ASSIGNED' | 'PICKING' | 'STAGED' | 'LOADED' | 'COMPLETED' | 'CLOSED' | 'ON_HOLD' | 'CANCELLED';
 
 @Entity({ name: 'shipping_orders' })
 export class ShippingOrder {
