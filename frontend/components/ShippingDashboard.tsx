@@ -237,23 +237,61 @@ function ActiveOrders() {
   };
 
   const runManualSync = async () => {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    // Sync last 7 days to catch any recently created documents
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10);
+    
     try {
       setSyncing(true);
       const result = await apiClient.post('/integrations/cungu/sync', {
         shipping: {
           dateFrom: since,
-          warehouse: 'Veleprodajni',
+          dateTo: today,
+          // Fetch from all warehouses, not just Veleprodajni
+          // Backend will filter by NasObjekat field
         },
+        persist: true, // Auto-import documents
       });
-      alert(
-        `Sinhronizacija završena.\nOtprema: ${result?.shippingCount ?? 0}\nPrijema: ${
-          result?.receivingCount ?? 0
-        }\nZalihe: ${result?.stockCount ?? 0}`,
-      );
-      await load();
+      
+      const imported = result?.shippingImported ?? 0;
+      const total = result?.shippingCount ?? 0;
+      
+      if (imported > 0) {
+        alert(
+          `✅ Sinhronizacija uspešna!\n\n` +
+          `📦 Uvezeno novih otpremnica: ${imported}\n` +
+          `📋 Ukupno pronađeno: ${total}\n\n` +
+          `Otpremnice su sada vidljive u sistemu.`
+        );
+      } else if (total > 0) {
+        alert(
+          `ℹ️ Sve otpremnice su već u sistemu.\n\n` +
+          `📋 Pronađeno: ${total}\n` +
+          `📦 Novih: 0\n\n` +
+          `Nema novih dokumenata za uvoz.`
+        );
+      } else {
+        alert(
+          `ℹ️ Nema novih otpremnica.\n\n` +
+          `Provereno je poslednjih 7 dana.\n` +
+          `Ako očekujete nove dokumente, proverite:\n` +
+          `• Da li su kreirani u Pantheon sistemu\n` +
+          `• Da li je datum dokumenta u poslednjih 7 dana`
+        );
+      }
+      
+      await load(); // Refresh list
     } catch (err: any) {
-      alert(err?.message || 'Greška pri sinhronizaciji.');
+      const errorMsg = err?.message || 'Greška pri sinhronizaciji.';
+      alert(
+        `❌ Greška pri sinhronizaciji\n\n` +
+        `${errorMsg}\n\n` +
+        `Proverite:\n` +
+        `• Internet konekciju\n` +
+        `• Pantheon server status\n` +
+        `• Kontaktirajte administratora ako problem opstaje`
+      );
+      console.error('Sync error:', err);
     } finally {
       setSyncing(false);
     }
@@ -689,20 +727,29 @@ function ActiveOrders() {
         </div>
         <button
           style={{
-            background: 'transparent',
-            border: `1px solid ${colors.borderDefault}`,
-            color: colors.brandYellow,
-            padding: '6px 12px',
-            borderRadius: 6,
-            fontSize: 12,
-            fontWeight: 600,
+            background: syncing 
+              ? 'transparent'
+              : 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+            border: syncing ? `1px solid ${colors.borderDefault}` : 'none',
+            color: syncing ? colors.textSecondary : '#fff',
+            padding: '8px 16px',
+            borderRadius: 8,
+            fontSize: 13,
+            fontWeight: 700,
             cursor: syncing ? 'not-allowed' : 'pointer',
             opacity: syncing ? 0.6 : 1,
+            boxShadow: syncing ? 'none' : '0 4px 12px rgba(6, 182, 212, 0.3)',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
           }}
           onClick={runManualSync}
           disabled={syncing}
+          title="Uvuci nove otpremnice iz Pantheon sistema (poslednjih 7 dana)"
         >
-          {syncing ? 'Sinhronišem…' : 'Sinhroniši (Cungu)'}
+          <span style={{ fontSize: 16 }}>{syncing ? '⏳' : '🔄'}</span>
+          {syncing ? 'Sinhronizacija u toku…' : 'Sinhroniši Pantheon'}
         </button>
       </div>
       {loading ? <div style={{ color: colors.textPrimary }}>Učitavanje…</div> : err ? <div style={{ color: colors.statusErr }}>{err}</div> : (
