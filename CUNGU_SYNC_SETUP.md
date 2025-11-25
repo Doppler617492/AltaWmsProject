@@ -117,14 +117,24 @@ CUNGU_SYNC_INTERVAL_MINUTES=15  # Every 15 minutes
 # 1. Update .env on server
 ssh root@46.224.54.239
 cd /opt/alta-wms
+
+# Use the automated script to ensure CUNGU variables are present
+./scripts/ensure-cungu-env.sh
+
+# Or manually edit if you need custom values
 nano .env  # Add the variables above
 
-# 2. Restart backend to pick up new config
-docker compose -f docker-compose.prod.yml restart backend
+# 2. Recreate backend container to pick up new config (restart is NOT enough)
+docker compose -f docker-compose.prod.yml --env-file .env up -d --force-recreate backend
 
-# 3. Verify scheduler started
+# 3. Verify variables are loaded in container
+docker compose -f docker-compose.prod.yml exec backend printenv | grep CUNGU
+
+# 4. Verify scheduler started
 docker logs alta-wms-backend-prod --tail 50 | grep "Cungu sync scheduler"
 ```
+
+**⚠️ IMPORTANT:** Simply restarting the container with `docker compose restart` will NOT load new environment variables. You **must** use `--force-recreate` to pick up changes from the `.env` file.
 
 You should see:
 ```

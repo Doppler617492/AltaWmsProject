@@ -218,6 +218,14 @@ TV_KIOSK_TOKEN=GENERATE_STRONG_RANDOM_TOKEN_HERE
 
 # Performance
 PERFORMANCE_REFRESH_INTERVAL=30
+
+# Cungu/Pantheon ERP Integration
+CUNGU_API_ENABLED=true
+CUNGU_API_URL=http://cungu.pantheonmn.net:3003
+CUNGU_API_USERNAME=CunguWMS
+CUNGU_API_PASSWORD=YOUR_PANTHEON_PASSWORD_HERE
+CUNGU_SYNC_PAGE_SIZE=500
+CUNGU_SHIPPING_METHOD=GetIssueDocWMS
 ```
 
 ### Frontend Environment Variables
@@ -912,16 +920,40 @@ find backups/ -mtime +30 -delete
 # 2. Pull changes
 git pull
 
-# 3. Update dependencies (ako je potrebno)
+# 3. Ensure CUNGU variables are present in .env
+./scripts/ensure-cungu-env.sh
+
+# 4. Update dependencies (ako je potrebno)
 docker compose -f docker-compose.prod.yml build --no-cache
 
-# 4. Restart
-docker compose -f docker-compose.prod.yml up -d
+# 5. Restart with --env-file to ensure variables are loaded
+docker compose -f docker-compose.prod.yml --env-file .env up -d --force-recreate
 
-# 5. Verify
+# 6. Verify
 docker compose -f docker-compose.prod.yml ps
 curl http://localhost:8000/health
+
+# 7. Verify CUNGU integration is enabled
+docker compose -f docker-compose.prod.yml exec backend printenv | grep CUNGU
 ```
+
+### ⚠️ Important: Cungu/Pantheon Integration
+
+The CUNGU environment variables **must be present in the `.env` file** for the Pantheon ERP integration to work. If you see "Cungu API integration is currently disabled" errors:
+
+```bash
+# Run the ensure script
+./scripts/ensure-cungu-env.sh
+
+# Recreate backend container with new variables
+cd /opt/alta-wms
+docker compose -f docker-compose.prod.yml --env-file .env up -d --force-recreate backend
+
+# Verify variables are loaded
+docker compose -f docker-compose.prod.yml exec backend printenv | grep CUNGU
+```
+
+The script will automatically add CUNGU variables if they're missing. This prevents the integration from breaking after container restarts.
 
 ---
 
