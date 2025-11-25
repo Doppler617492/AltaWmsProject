@@ -30,9 +30,14 @@ const shippingStatusMetaMap: Record<string, { label: string; bg: string; color: 
   LOADED: { label: 'UTOVARENO', bg: '#0ea5e9', color: '#022c4b' },
   CLOSED: { label: 'ZATVORENO', bg: '#94a3b8', color: '#0f172a' },
   CANCELLED: { label: 'OTKAZANO', bg: '#f87171', color: '#fff' },
+  ASSIGNED: { label: 'DODELJENO', bg: '#22c55e', color: '#fff' },
 };
 
-const getShippingStatusMeta = (status: string | null | undefined) => {
+const getShippingStatusMeta = (status: string | null | undefined, isAssigned?: boolean) => {
+  // If assigned, show ASSIGNED status instead
+  if (isAssigned) {
+    return shippingStatusMetaMap['ASSIGNED'];
+  }
   const key = (status || '').toUpperCase();
   return (
     shippingStatusMetaMap[key] || {
@@ -43,8 +48,8 @@ const getShippingStatusMeta = (status: string | null | undefined) => {
   );
 };
 
-const renderShippingStatusBadge = (status: string | null | undefined) => {
-  const meta = getShippingStatusMeta(status);
+const renderShippingStatusBadge = (status: string | null | undefined, isAssigned?: boolean) => {
+  const meta = getShippingStatusMeta(status, isAssigned);
   return (
     <span
       style={{
@@ -785,7 +790,16 @@ function ActiveOrders() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r:any, idx:number)=> (
+            {rows
+              .sort((a: any, b: any) => {
+                // Sort by assignment: assigned orders first
+                const aAssigned = !!(a.assigned_summary || a.assigned_team_name);
+                const bAssigned = !!(b.assigned_summary || b.assigned_team_name);
+                if (aAssigned && !bAssigned) return -1;
+                if (!aAssigned && bAssigned) return 1;
+                return 0;
+              })
+              .map((r:any, idx:number)=> (
               <tr key={idx} style={{ background: idx % 2 === 0 ? 'rgba(255,193,7,0.04)' : 'transparent' }}>
                 <td style={td}>
                   <input
@@ -800,9 +814,15 @@ function ActiveOrders() {
                 <td style={td}>
                   <strong style={{ color: colors.brandYellow }}>{r.store_name || '-'}</strong>
                 </td>
-                <td style={td}>{renderShippingStatusBadge(r.status)}</td>
+                <td style={td}>{renderShippingStatusBadge(r.status, !!(r.assigned_summary || r.assigned_team_name))}</td>
                 <td style={td}>{r.created_by_name||'-'}</td>
-                <td style={td}>{r.assigned_user_name||'-'}</td>
+                <td style={td}>
+                  {r.assigned_summary ? (
+                    <span style={{ color: colors.brandYellow, fontWeight: 600 }}>{r.assigned_summary}</span>
+                  ) : (
+                    r.assigned_user_name || '-'
+                  )}
+                </td>
                 <td style={td}><ProgressBar v={r.progress_pct} /></td>
                 <td style={td}>{r.age_minutes} min</td>
                 <td style={td}><AssigneesButton type="SHIPPING" id={r.id} /></td>
