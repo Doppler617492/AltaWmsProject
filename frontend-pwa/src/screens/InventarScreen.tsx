@@ -19,17 +19,26 @@ interface InventoryItem {
 interface ArticleInventory {
   sku: string;
   name: string;
+  barcodes?: string[];
+  supplier?: string | null;
   stores: Array<{
+    store_id: number;
     store_name: string;
+    store_code: string;
     quantity: number;
+    last_synced?: string | null;
   }>;
   total_quantity: number;
+  stores_with_stock: number;
 }
 
 interface SearchResult {
   ident: string;
   naziv: string;
   barcodes?: string[];
+  supplier_name?: string;
+  supplier_code?: string;
+  unit?: string;
 }
 
 // Custom SVG Icons
@@ -142,6 +151,11 @@ export default function InventarScreen() {
       
       setSearchResults(items);
       setSelectedArticle(null);
+      
+      // If we have results and only one, automatically load its inventory
+      if (items.length === 1) {
+        await loadInventoryForArticle(items[0]);
+      }
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);
@@ -157,36 +171,50 @@ export default function InventarScreen() {
     try {
       const token = localStorage.getItem('token') || '';
       
-      // Search across all store inventories for this specific article
+      // Get inventory from the consolidated store inventory table
+      // This uses the same API that the admin interface uses
       const inventoryPromises = stores.map(async (store) => {
         try {
           const response = await fetch(`${apiBase}/stock/by-store/${store.id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           const data = await response.json();
+          
+          // Find the specific article in this store's inventory
           const matchingItem = (data?.items || []).find((item: any) => 
             item.sku === article.ident
           );
+          
           return {
+            store_id: store.id,
             store_name: store.name,
-            quantity: matchingItem?.quantity || 0
+            store_code: store.code,
+            quantity: matchingItem?.quantity || 0,
+            last_synced: data?.last_synced || null
           };
         } catch {
           return {
+            store_id: store.id,
             store_name: store.name,
-            quantity: 0
+            store_code: store.code,
+            quantity: 0,
+            last_synced: null
           };
         }
       });
 
       const storeInventories = await Promise.all(inventoryPromises);
       const totalQuantity = storeInventories.reduce((sum, store) => sum + store.quantity, 0);
+      const storesWithStock = storeInventories.filter(store => store.quantity > 0).length;
       
       setSelectedArticle({
         sku: article.ident,
         name: article.naziv,
+        barcodes: article.barcodes || [],
         stores: storeInventories.sort((a, b) => b.quantity - a.quantity),
-        total_quantity: totalQuantity
+        total_quantity: totalQuantity,
+        stores_with_stock: storesWithStock,
+        supplier: article.supplier_name || article.supplier_code || null
       });
     } catch (error) {
       console.error('Inventory load error:', error);
@@ -403,6 +431,15 @@ export default function InventarScreen() {
                   }}>
                     {article.naziv}
                   </div>
+                  {(article.supplier_name || article.supplier_code) && (
+                    <div style={{
+                      fontSize: 12,
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      marginTop: 4
+                    }}>
+                      Dobavljač: {article.supplier_name || article.supplier_code}
+                    </div>
+                  )}
                   {article.barcodes && article.barcodes.length > 0 && (
                     <div style={{
                       fontSize: 12,
@@ -448,7 +485,7 @@ export default function InventarScreen() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
-                marginBottom: 8
+                marginBottom: 12
               }}>
                 <div style={{
                   width: 40,
@@ -461,7 +498,7 @@ export default function InventarScreen() {
                 }}>
                   <PackageIcon />
                 </div>
-                <div>
+                <div style={{ flex: 1 }}>
                   <div style={{
                     fontSize: 20,
                     fontWeight: 700,
@@ -472,26 +509,99 @@ export default function InventarScreen() {
                   </div>
                   <div style={{
                     fontSize: 14,
-                    color: 'rgba(255, 255, 255, 0.8)'
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    lineHeight: '1.3'
                   }}>
                     {selectedArticle.name}
                   </div>
+                  {selectedArticle.supplier && (
+                    <div style={{
+                      fontSize: 12,
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      marginTop: 2
+                    }}>
+                      {selectedArticle.supplier}
+                    </div>
+                  )}
                 </div>
               </div>
               
+              {selectedArticle.barcodes && selectedArticle.barcodes.length > 0 && (
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  marginBottom: 12
+                }}>
+                  <div style={{
+                    fontSize: 12,
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    marginBottom: 4
+                  }}>
+                    BARKODOVI:
+                  </div>
+                  <div style={{
+                    fontSize: 13,
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    fontFamily: 'monospace'
+                  }}>
+                    {selectedArticle.barcodes.join(' • ')}
+                  </div>
+                </div>
+              )}
+              
+              {/* Summary Stats */}
               <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                background: selectedArticle.total_quantity > 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                color: selectedArticle.total_quantity > 0 ? '#22c55e' : '#ef4444',
-                padding: '8px 16px',
-                borderRadius: 8,
-                fontSize: 16,
-                fontWeight: 600
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 12,
+                marginBottom: 16
               }}>
-                <InventoryIcon />
-                Ukupno: {selectedArticle.total_quantity.toLocaleString()} kom
+                <div style={{
+                  background: selectedArticle.total_quantity > 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  border: `1px solid ${selectedArticle.total_quantity > 0 ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                  borderRadius: 8,
+                  padding: 12,
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    fontSize: 20,
+                    fontWeight: 700,
+                    color: selectedArticle.total_quantity > 0 ? '#22c55e' : '#ef4444'
+                  }}>
+                    {selectedArticle.total_quantity.toLocaleString()}
+                  </div>
+                  <div style={{
+                    fontSize: 12,
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    marginTop: 2
+                  }}>
+                    Ukupno komada
+                  </div>
+                </div>
+                
+                <div style={{
+                  background: selectedArticle.stores_with_stock > 0 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(156, 163, 175, 0.15)',
+                  border: `1px solid ${selectedArticle.stores_with_stock > 0 ? 'rgba(59, 130, 246, 0.3)' : 'rgba(156, 163, 175, 0.3)'}`,
+                  borderRadius: 8,
+                  padding: 12,
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    fontSize: 20,
+                    fontWeight: 700,
+                    color: selectedArticle.stores_with_stock > 0 ? '#3b82f6' : '#9ca3af'
+                  }}>
+                    {selectedArticle.stores_with_stock}
+                  </div>
+                  <div style={{
+                    fontSize: 12,
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    marginTop: 2
+                  }}>
+                    Prodavnica sa zalihom
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -513,35 +623,70 @@ export default function InventarScreen() {
               <div style={{ display: 'grid', gap: 8 }}>
                 {selectedArticle.stores.map((store, index) => (
                   <div 
-                    key={index}
+                    key={store.store_id}
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      padding: '12px 16px',
+                      padding: '14px 16px',
                       background: store.quantity > 0 
-                        ? 'rgba(255, 255, 255, 0.08)' 
+                        ? 'rgba(34, 197, 94, 0.1)' 
                         : 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      border: `1px solid ${store.quantity > 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.1)'}`,
                       borderRadius: 10,
-                      fontSize: 14
+                      transition: 'all 0.2s ease'
                     }}
                   >
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 8,
-                      color: 'rgba(255, 255, 255, 0.9)'
+                      gap: 12,
+                      flex: 1
                     }}>
-                      <WarehouseIcon />
-                      {store.store_name.replace('Prodavnica - ', '')}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        color: 'rgba(255, 255, 255, 0.9)'
+                      }}>
+                        <WarehouseIcon />
+                        <div>
+                          <div style={{
+                            fontSize: 14,
+                            fontWeight: 600
+                          }}>
+                            {store.store_name.replace('Prodavnica - ', '')}
+                          </div>
+                          <div style={{
+                            fontSize: 11,
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            marginTop: 1
+                          }}>
+                            {store.store_code}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <div style={{
-                      fontWeight: 600,
-                      color: store.quantity > 0 ? '#22c55e' : 'rgba(255, 255, 255, 0.4)',
-                      fontSize: 15
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12
                     }}>
-                      {store.quantity.toLocaleString()} kom
+                      <div style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: store.quantity > 0 ? '#22c55e' : 'rgba(255, 255, 255, 0.4)'
+                      }}>
+                        {store.quantity.toLocaleString()} kom
+                      </div>
+                      {store.quantity > 0 && (
+                        <div style={{
+                          width: 8,
+                          height: 8,
+                          background: '#22c55e',
+                          borderRadius: '50%'
+                        }} />
+                      )}
                     </div>
                   </div>
                 ))}
