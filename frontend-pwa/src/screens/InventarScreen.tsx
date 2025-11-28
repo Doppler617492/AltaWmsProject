@@ -88,6 +88,7 @@ export default function InventarScreen() {
   const [stores, setStores] = useState<Store[]>([]);
   const [user, setUser] = useState<any>(null);
   const [authError, setAuthError] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const router = useRouter();
   
   const apiBase = typeof window !== 'undefined' ? `${window.location.origin}/api/fresh` : 'http://localhost:8000';
@@ -96,6 +97,7 @@ export default function InventarScreen() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
+      setInitializing(false);
       router.push('/');
       return;
     }
@@ -108,6 +110,7 @@ export default function InventarScreen() {
       const now = Math.floor(Date.now() / 1000);
       if (payload.exp && payload.exp < now) {
         localStorage.removeItem('token');
+        setInitializing(false);
         router.push('/');
         return;
       }
@@ -119,8 +122,10 @@ export default function InventarScreen() {
         role: payload.role,
         permissions: payload.permissions || []
       });
+      setInitializing(false);
     } catch {
       localStorage.removeItem('token');
+      setInitializing(false);
       router.push('/');
       return;
     }
@@ -292,8 +297,23 @@ export default function InventarScreen() {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  if (!user) {
-    return null;
+  if (initializing || !user) {
+    return (
+      <div 
+        className="min-h-screen" 
+        style={{ 
+          background: 'linear-gradient(180deg, #0f1419 0%, #0a0e13 50%, #000000 100%)',
+          color: '#ffffff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 18, marginBottom: 12 }}>Učitavanje...</div>
+        </div>
+      </div>
+    );
   }
 
   if (authError) {
