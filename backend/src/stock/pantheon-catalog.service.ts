@@ -150,7 +150,7 @@ export class PantheonCatalogService {
     // Fetch paginated
     while (true) {
       const payload: CunguRequestPayload = {
-        method: 'getIdentWMS',
+        method: 'getIdent',
         offset,
         limit,
       };

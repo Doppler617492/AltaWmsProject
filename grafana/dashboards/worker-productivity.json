@@ -1,0 +1,788 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL-WMS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total_items"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#00d9ff",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": ["sum", "mean"],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL-WMS"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  u.full_name as \"Radnik\",\n  COUNT(DISTINCT ta.task_id) as \"Broj Zadataka\",\n  SUM(CASE \n    WHEN ta.task_type = 'SHIPPING' THEN COALESCE((\n      SELECT SUM(sol.picked_qty) \n      FROM shipping_order_lines sol \n      WHERE sol.\"orderId\" = ta.task_id\n    ), 0)\n    WHEN ta.task_type = 'RECEIVING' THEN COALESCE((\n      SELECT SUM(ri.received_quantity) \n      FROM receiving_items ri \n      WHERE ri.receiving_document_id = ta.task_id\n    ), 0)\n    ELSE 0 \n  END) as \"Ukupno Artikala\"\nFROM task_assignees ta\nJOIN users u ON u.id = ta.user_id\nWHERE ta.status = 'DONE'\n  AND ta.completed_at >= $__timeFrom()\n  AND ta.completed_at < $__timeTo()\nGROUP BY u.full_name\nORDER BY \"Ukupno Artikala\" DESC\nLIMIT 20;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Obrađeni Artikli po Radniku",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL-WMS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#4ade80",
+                "value": null
+              },
+              {
+                "color": "#ffd400",
+                "value": 300
+              },
+              {
+                "color": "#f87171",
+                "value": 600
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL-WMS"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  AVG(EXTRACT(EPOCH FROM (ta.completed_at - ta.started_at))) as \"Prosečno Vreme (sek)\"\nFROM task_assignees ta\nWHERE ta.status = 'DONE'\n  AND ta.started_at IS NOT NULL\n  AND ta.completed_at IS NOT NULL\n  AND ta.completed_at >= $__timeFrom()\n  AND ta.completed_at < $__timeTo();",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Prosečno Vreme po Dokumentu",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL-WMS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#4ade80",
+                "value": null
+              },
+              {
+                "color": "#ffd400",
+                "value": 30
+              },
+              {
+                "color": "#f87171",
+                "value": 60
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL-WMS"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH item_times AS (\n  SELECT \n    ta.user_id,\n    EXTRACT(EPOCH FROM (ta.completed_at - ta.started_at)) as duration_sec,\n    CASE \n      WHEN ta.task_type = 'SHIPPING' THEN COALESCE((\n        SELECT SUM(sol.picked_qty) \n        FROM shipping_order_lines sol \n        WHERE sol.\"orderId\" = ta.task_id\n      ), 1)\n      WHEN ta.task_type = 'RECEIVING' THEN COALESCE((\n        SELECT SUM(ri.received_quantity) \n        FROM receiving_items ri \n        WHERE ri.receiving_document_id = ta.task_id\n      ), 1)\n      ELSE 1\n    END as item_count\n  FROM task_assignees ta\n  WHERE ta.status = 'DONE'\n    AND ta.started_at IS NOT NULL\n    AND ta.completed_at IS NOT NULL\n    AND ta.completed_at >= $__timeFrom()\n    AND ta.completed_at < $__timeTo()\n)\nSELECT AVG(duration_sec / NULLIF(item_count, 0)) as \"Prosečno Vreme po Artiklu\"\nFROM item_times\nWHERE item_count > 0;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Prosečno Vreme po Artiklu",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL-WMS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 4,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "always",
+        "stacking": "normal",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL-WMS"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  u.full_name as \"Radnik\",\n  COUNT(*) FILTER (WHERE im.reason LIKE 'PICK-OVER%' OR im.reason LIKE '%SURPLUS%') as \"Višak\",\n  COUNT(*) FILTER (WHERE im.reason LIKE 'PICK-UNDER%' OR im.reason LIKE '%SHORT%') as \"Manjak\",\n  COUNT(*) FILTER (WHERE im.reason LIKE '%WRONG%' OR im.reason LIKE '%ERROR%') as \"Pogrešan Artikl\",\n  COUNT(*) FILTER (WHERE im.reason LIKE '%ADJUST%') as \"Korekcije\"\nFROM inventory_movements im\nJOIN users u ON u.id = im.created_by\nWHERE im.created_at >= $__timeFrom()\n  AND im.created_at < $__timeTo()\n  AND im.reason IS NOT NULL\nGROUP BY u.full_name\nHAVING COUNT(*) > 0\nORDER BY (COUNT(*)) DESC\nLIMIT 15;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Stopa Grešaka po Radniku",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL-WMS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#1e293b",
+                "value": null
+              },
+              {
+                "color": "#0ea5e9",
+                "value": 1
+              },
+              {
+                "color": "#00d9ff",
+                "value": 5
+              },
+              {
+                "color": "#ffd400",
+                "value": 10
+              },
+              {
+                "color": "#f87171",
+                "value": 15
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 5,
+      "options": {
+        "calculate": false,
+        "cellGap": 2,
+        "cellValues": {
+          "decimals": 0
+        },
+        "color": {
+          "exponent": 0.5,
+          "fill": "#00d9ff",
+          "mode": "scheme",
+          "reverse": false,
+          "scale": "exponential",
+          "scheme": "Turbo",
+          "steps": 128
+        },
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "filterValues": {
+          "le": 1e-9
+        },
+        "legend": {
+          "show": true
+        },
+        "rowsFrame": {
+          "layout": "auto"
+        },
+        "showValue": "always",
+        "tooltip": {
+          "mode": "single",
+          "showColorScale": false,
+          "yHistogram": false
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL-WMS"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  EXTRACT(HOUR FROM ta.started_at) as \"Sat\",\n  u.full_name as \"Radnik\",\n  COUNT(*) as \"Broj Zadataka\"\nFROM task_assignees ta\nJOIN users u ON u.id = ta.user_id\nWHERE ta.status = 'DONE'\n  AND ta.started_at >= $__timeFrom()\n  AND ta.started_at < $__timeTo()\nGROUP BY EXTRACT(HOUR FROM ta.started_at), u.full_name\nORDER BY \"Sat\", \"Radnik\";",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Heatmap Produktivnosti po Satima",
+      "type": "heatmap"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL-WMS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "color-text"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#4ade80",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Prosečno Vreme (min)"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-GrYlRd"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 6,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Prosečno Vreme (min)"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL-WMS"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  u.full_name as \"Radnik\",\n  COUNT(*) as \"Broj Zadataka\",\n  ROUND(AVG(EXTRACT(EPOCH FROM (ta.completed_at - ta.started_at))) / 60, 2) as \"Prosečno Vreme (min)\",\n  SUM(CASE \n    WHEN ta.task_type = 'SHIPPING' THEN COALESCE((\n      SELECT SUM(sol.picked_qty) \n      FROM shipping_order_lines sol \n      WHERE sol.\"orderId\" = ta.task_id\n    ), 0)\n    WHEN ta.task_type = 'RECEIVING' THEN COALESCE((\n      SELECT SUM(ri.received_quantity) \n      FROM receiving_items ri \n      WHERE ri.receiving_document_id = ta.task_id\n    ), 0)\n    ELSE 0 \n  END) as \"Ukupno Artikala\"\nFROM task_assignees ta\nJOIN users u ON u.id = ta.user_id\nWHERE ta.status = 'DONE'\n  AND ta.started_at IS NOT NULL\n  AND ta.completed_at IS NOT NULL\n  AND ta.completed_at >= $__timeFrom()\n  AND ta.completed_at < $__timeTo()\nGROUP BY u.full_name\nORDER BY \"Prosečno Vreme (min)\" ASC\nLIMIT 5;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Top 5 Najbrži Radnici",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL-WMS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "color-text"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#f87171",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Prosečno Vreme (min)"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr",
+                  "reverse": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Prosečno Vreme (min)"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL-WMS"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  u.full_name as \"Radnik\",\n  COUNT(*) as \"Broj Zadataka\",\n  ROUND(AVG(EXTRACT(EPOCH FROM (ta.completed_at - ta.started_at))) / 60, 2) as \"Prosečno Vreme (min)\",\n  SUM(CASE \n    WHEN ta.task_type = 'SHIPPING' THEN COALESCE((\n      SELECT SUM(sol.picked_qty) \n      FROM shipping_order_lines sol \n      WHERE sol.\"orderId\" = ta.task_id\n    ), 0)\n    WHEN ta.task_type = 'RECEIVING' THEN COALESCE((\n      SELECT SUM(ri.received_quantity) \n      FROM receiving_items ri \n      WHERE ri.receiving_document_id = ta.task_id\n    ), 0)\n    ELSE 0 \n  END) as \"Ukupno Artikala\"\nFROM task_assignees ta\nJOIN users u ON u.id = ta.user_id\nWHERE ta.status = 'DONE'\n  AND ta.started_at IS NOT NULL\n  AND ta.completed_at IS NOT NULL\n  AND ta.completed_at >= $__timeFrom()\n  AND ta.completed_at < $__timeTo()\nGROUP BY u.full_name\nORDER BY \"Prosečno Vreme (min)\" DESC\nLIMIT 5;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Top 5 Najsporiji Radnici",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["alta-wms", "produktivnost", "radnici"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "Europe/Podgorica",
+  "title": "Produktivnost Radnika",
+  "uid": "worker-productivity",
+  "version": 1,
+  "weekStart": "monday"
+}

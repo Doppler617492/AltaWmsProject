@@ -25,7 +25,8 @@ export interface ReceivingSyncFilters {
   dateTo?: string;
   docTypes?: string[];
   status?: string;
-  warehouse?: string;
+  warehouse?: string; // Legacy single warehouse
+  warehouses?: string[]; // Multiple warehouses
   rawFilters?: Record<string, any>;
 }
 
@@ -37,11 +38,21 @@ export class CunguReceivingService {
 
   /**
    * Fetches receiving documents from Cungu WMS.
-   * The method name is subject to confirmation – the current plan is to use `GetReceiptDocWMS`.
+   * According to Cungu API v1.2 documentation Section 5:
+   * - Receiving documents have type 20B0 (and potentially other 20Bx types)
+   * - They have Posiljalac field (sender) and NasObjekat (our warehouse receiving)
+   * - Shipping documents have types like 20ET, 20CT, 209T, 200R
    */
   async fetchDocuments(filters: ReceivingSyncFilters = {}): Promise<ExternalReceivingDocument[]> {
-    const methodName = process.env.CUNGU_RECEIVING_METHOD || 'GetReceiptDocWMS';
-    const payload = this.buildPayload(methodName, filters);
+    const methodName = process.env.CUNGU_RECEIVING_METHOD || 'GetIssueDocWMS';
+    
+    // First try: Search WITH document type filter for known receiving types
+    let receivingFilters: ReceivingSyncFilters = {
+      ...filters,
+      docTypes: filters.docTypes || ['20B0', '20B1', '20B2', '20B3', '20B4', '20B5', '20B', '20P0', '20P1', '20P'],
+    };
+    
+    let payload = this.buildPayload(methodName, receivingFilters);
 
     this.logger.debug(
       `Fetching receiving documents from Cungu (method=${methodName}, filters=${JSON.stringify(
@@ -49,15 +60,51 @@ export class CunguReceivingService {
       )})`,
     );
 
-    const data = await this.client.postGet<CunguIssueDocument[] | { data: CunguIssueDocument[] }>(
+    let data = await this.client.postGet<CunguIssueDocument[] | { data: CunguIssueDocument[] }>(
       payload,
     );
 
-    const documentsArray = Array.isArray(data)
+    let documentsArray = Array.isArray(data)
       ? data
       : Array.isArray((data as any)?.data)
       ? ((data as any).data as CunguIssueDocument[])
       : [];
+
+    // If no documents found with type filter, try WITHOUT type filter and filter by Posiljalac field
+    if (documentsArray.length === 0) {
+      this.logger.debug('No documents found with type filter - trying without docType filter...');
+      const broadFilters: ReceivingSyncFilters = {
+        ...filters,
+        docTypes: undefined, // Remove type filter
+      };
+      payload = this.buildPayload(methodName, broadFilters);
+      
+      data = await this.client.postGet<CunguIssueDocument[] | { data: CunguIssueDocument[] }>(
+        payload,
+      );
+      
+      documentsArray = Array.isArray(data)
+        ? data
+        : Array.isArray((data as any)?.data)
+        ? ((data as any).data as CunguIssueDocument[])
+        : [];
+      
+      // Filter for receiving docs: must have Posiljalac (sender) field
+      documentsArray = documentsArray.filter(doc => !!doc.Posiljalac);
+      
+      // Log unique document types found
+      const uniqueTypes = [...new Set(documentsArray.map(d => d.TipDokumenta))];
+      if (uniqueTypes.length > 0) {
+        this.logger.log(`Found receiving document types: ${uniqueTypes.join(', ')}`);
+      }
+    }
+
+    // Log document structure for debugging
+    if (documentsArray.length > 0) {
+      this.logger.debug(`Sample receiving doc: ${JSON.stringify(documentsArray[0], null, 2)}`);
+    }
+    
+    this.logger.log(`Fetched ${documentsArray.length} receiving documents from Cungu`);
 
     return documentsArray.map(doc => this.mapDocument(doc));
   }
@@ -74,13 +121,13 @@ export class CunguReceivingService {
 
     if (filters.dateTo) {
       cunguFilters['m.adDate'] = {
-        operator: 'between',
+        operator: 'BETWEEN',
         value: [filters.dateFrom ?? filters.dateTo, filters.dateTo],
       };
     }
 
     if (filters.docTypes?.length) {
-      cunguFilters['m.acDocType'] = { operator: 'in', value: filters.docTypes };
+      cunguFilters['m.acDocType'] = { operator: 'IN', value: filters.docTypes };
     }
 
     if (filters.status) {

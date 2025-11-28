@@ -63,6 +63,15 @@ export default function App({ Component, pageProps }: AppProps) {
         * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
         button { min-height: 70px; }
         .focus-ring:focus { outline: 2px solid #ffffff; outline-offset: 2px; box-shadow: 0 0 0 3px rgba(255,195,0,0.35); }
+        
+        /* Animation for spinning loader */
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
       `}</style>
       <Component {...pageProps} />
     </>

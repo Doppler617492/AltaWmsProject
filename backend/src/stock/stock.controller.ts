@@ -2,11 +2,15 @@ import { Body, Controller, Get, Param, UseGuards, Req, ForbiddenException, Query
 import { Response } from 'express';
 import { StockService } from './stock.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SyncProgressService } from './sync-progress.service';
 
 @Controller('stock')
 @UseGuards(JwtAuthGuard)
 export class StockController {
-  constructor(private stockService: StockService) {}
+  constructor(
+    private stockService: StockService,
+    private syncProgressService: SyncProgressService,
+  ) {}
 
   // FAZA 5.1 — RBAC helpers
   private ensureRole(role: string, allowed: string[]) {
@@ -108,6 +112,69 @@ export class StockController {
     const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
     this.ensureRole(role, ['admin', 'menadzer']);
     return this.stockService.syncPantheonItems({ full: !!body.full, force: !!body.force });
+  }
+
+  @Post('sync-catalog')
+  async syncCatalog(@Req() req: any, @Body() body: { full?: boolean } = {}) {
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin', 'menadzer']);
+    return this.stockService.syncCatalog({ full: !!body.full });
+  }
+
+  // Get list of stores/warehouses from database
+  @Get('stores')
+  async getStores(@Req() req: any) {
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin', 'menadzer', 'sef_magacina', 'sef', 'sef_prodavnice']);
+    return this.stockService.getStores();
+  }
+
+  // Get inventory for a specific store (calculated from documents)
+  @Get('by-store/:storeId')
+  async getStoreInventory(@Req() req: any, @Param('storeId') storeId: string) {
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin', 'menadzer', 'sef_magacina', 'sef', 'sef_prodavnice']);
+    return this.stockService.getStoreInventory(parseInt(storeId, 10));
+  }
+
+  // Sync inventory for a specific store from Cungu API
+  @Post('sync-store-inventory/:storeId')
+  async syncStoreInventory(@Req() req: any, @Param('storeId') storeId: string) {
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin', 'menadzer']);
+    return this.stockService.syncStoreInventory(parseInt(storeId, 10));
+  }
+
+  // Sync inventory for all stores from Cungu API
+  @Post('sync-all-store-inventory')
+  async syncAllStoreInventory(@Req() req: any, @Body() body: { syncId?: string }) {
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin', 'menadzer']);
+    const syncId = body?.syncId || `sync_${Date.now()}`;
+    // Start sync in background
+    this.stockService.syncAllStoreInventory(syncId).catch(() => {});
+    return { syncId, message: 'Sinhronizacija započeta' };
+  }
+
+  // Get sync progress
+  @Get('sync-progress/:syncId')
+  async getSyncProgress(@Req() req: any, @Param('syncId') syncId: string) {
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin', 'menadzer', 'sef_magacina']);
+    const progress = this.syncProgressService.getProgress(syncId);
+    if (!progress) {
+      return { status: 'not_found', message: 'Sinhronizacija nije pronađena' };
+    }
+    return progress;
+  }
+
+  // Cancel sync
+  @Post('sync-cancel/:syncId')
+  async cancelSync(@Req() req: any, @Param('syncId') syncId: string) {
+    const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
+    this.ensureRole(role, ['admin', 'menadzer']);
+    this.syncProgressService.cancelSync(syncId);
+    return { message: 'Sinhronizacija otkazana' };
   }
 
   // Movements CSV export

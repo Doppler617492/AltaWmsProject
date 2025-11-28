@@ -809,20 +809,52 @@ export default function ReceivingDocuments() {
   };
 
   const runManualSync = async () => {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    // Sync last 7 days to check if there are any receiving documents
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10);
+    
     try {
       setSyncing(true);
       const result = await apiClient.post('/integrations/cungu/sync', {
         receiving: {
           dateFrom: since,
-          warehouse: 'Veleprodajni',
+          dateTo: today,
+          // Only these warehouses
+          warehouses: ['Veleprodajni Magacin', 'Tranzitno skladiste', 'Carinsko Skladiste'],
         },
+        persist: true, // Auto-import documents
       });
-      alert(
-        `Sinhronizacija završena.\nPrijema: ${result?.receivingCount ?? 0}\nOtprema: ${
-          result?.shippingCount ?? 0
-        }\nZalihe: ${result?.stockCount ?? 0}`,
-      );
+      
+      const imported = result?.receivingImported ?? 0;
+      const total = result?.receivingCount ?? 0;
+      
+      if (imported > 0) {
+        alert(
+          `✅ Sinhronizacija uspešna!\n\n` +
+          `📦 Uvezeno novih prijemnica: ${imported}\n` +
+          `📋 Ukupno pronađeno: ${total}\n\n` +
+          `Prijemnice su sada vidljive u sistemu.`
+        );
+      } else if (total > 0) {
+        alert(
+          `ℹ️ Sve prijemnice su već u sistemu.\n\n` +
+          `📋 Pronađeno: ${total}\n` +
+          `📦 Novih: 0\n\n` +
+          `Nema novih dokumenata za uvoz.`
+        );
+      } else {
+        alert(
+          `ℹ️ Nema novih prijemnica.\n\n` +
+          `Provereno je poslednjih 7 dana.\n` +
+          `Skladišta: Veleprodajni Magacin, Tranzitno skladiste, Carinsko Skladiste\n\n` +
+          `Ako očekujete nove dokumente, proverite:\n` +
+          `• Da li su dokumenti kreirani u Pantheon sistemu\n` +
+          `• Da li su iz pravih skladišta\n` +
+          `• Da li dokumenti imaju polje "Posiljalac" (pošiljalac)\n` +
+          `• Datum dokumenta (mora biti u poslednjih 7 dana)`
+        );
+      }
+      
       await fetchDocuments();
     } catch (err: any) {
       alert(err?.message || 'Greška pri sinhronizaciji.');
@@ -841,10 +873,29 @@ export default function ReceivingDocuments() {
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
             onClick={runManualSync}
-            style={styles.syncButton}
+            style={{
+              background: syncing 
+                ? 'transparent'
+                : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+              border: syncing ? `1px solid ${colors.borderDefault}` : 'none',
+              color: syncing ? colors.textSecondary : '#000',
+              padding: '8px 16px',
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: syncing ? 'not-allowed' : 'pointer',
+              opacity: syncing ? 0.6 : 1,
+              boxShadow: syncing ? 'none' : '0 4px 12px rgba(251, 191, 36, 0.3)',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
             disabled={syncing}
+            title="Uvuci nove prijemnice iz Pantheon sistema (samo iz Veleprodajni Magacin, Tranzitno skladiste i Carinsko Skladiste, poslednjih 7 dana)"
           >
-            {syncing ? 'Sinhronišem…' : 'Sinhroniši (Cungu)'}
+            <span style={{ fontSize: 16 }}>{syncing ? '⏳' : '🔄'}</span>
+            {syncing ? 'Sinhronizacija u toku…' : 'Sinhroniši Pantheon'}
           </button>
           <button 
             onClick={() => setShowImportModal(true)}
@@ -858,6 +909,30 @@ export default function ReceivingDocuments() {
           >
             + Novi prijem
           </button>
+        </div>
+      </div>
+
+      {/* API Limitation Warning */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%)',
+        border: '1px solid rgba(251, 191, 36, 0.3)',
+        borderRadius: 8,
+        padding: '12px 16px',
+        marginBottom: 16,
+        display: 'flex',
+        alignItems: 'start',
+        gap: 12,
+      }}>
+        <span style={{ fontSize: 20, marginTop: 2 }}>⚠️</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ color: '#fbbf24', fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
+            Pantheon API Ograničenje
+          </div>
+          <div style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.5 }}>
+            Cungu API trenutno ne vraća prijemne dokumente. Metod <code style={{background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4}}>GetIssueDocWMS</code> vraća samo otpremne dokumente (20ET, 20CT, 209T).
+            <br/>
+            Za sada koristite <strong>Import</strong> funkciju ili <strong>+ Novi prijem</strong> za unos prijemnih dokumenata.
+          </div>
         </div>
       </div>
       

@@ -25,16 +25,36 @@ export class StoresController {
   @Post()
   async createStore(@Body() storeData: Partial<Store>, @Req() req: any) {
     // Only admin and menadzer can create stores
-    const role = req.user?.role;
+    const role = req.user?.role?.toLowerCase();
     if (!['admin', 'menadzer'].includes(role)) {
       throw new ForbiddenException('Samo admin i menadžer mogu kreirati prodavnice');
     }
     return this.storesService.create(storeData);
   }
 
+  @Post('sync-from-cungu')
+  async syncStoresFromCungu(@Req() req: any) {
+    // Only admin and menadzer can sync stores
+    const role = req.user?.role?.toLowerCase();
+    if (!['admin', 'menadzer'].includes(role)) {
+      throw new ForbiddenException('Samo admin i menadžer mogu sinhronizovati prodavnice');
+    }
+    return this.storesService.syncFromCungu();
+  }
+
+  @Post('sync-from-stock-api')
+  async syncStoresFromStockAPI(@Req() req: any) {
+    // Only admin and menadzer can sync stores
+    const role = req.user?.role?.toLowerCase();
+    if (!['admin', 'menadzer'].includes(role)) {
+      throw new ForbiddenException('Samo admin i menadžer mogu sinhronizovati prodavnice');
+    }
+    return this.storesService.syncStoresFromStockAPI();
+  }
+
   @Patch(':id')
   async updateStore(@Param('id') id: string, @Body() storeData: Partial<Store>, @Req() req: any) {
-    const role = req.user?.role;
+    const role = req.user?.role?.toLowerCase();
     if (!['admin', 'menadzer'].includes(role)) {
       throw new ForbiddenException('Samo admin i menadžer mogu izmeniti prodavnicu');
     }
@@ -43,7 +63,7 @@ export class StoresController {
 
   @Delete(':id')
   async deleteStore(@Param('id') id: string, @Req() req: any) {
-    const role = req.user?.role;
+    const role = req.user?.role?.toLowerCase();
     if (!['admin', 'menadzer'].includes(role)) {
       throw new ForbiddenException('Samo admin i menadžer mogu obrisati prodavnicu');
     }

@@ -75,15 +75,19 @@ class ApiClient {
     const baseInit: RequestInit = { ...init, cache: 'no-store' };
     const sep = urlPath.includes('?') ? '&' : '?';
     const bust = `${sep}__ts=${Date.now()}`;
-    // Always prefer same-origin proxies to avoid CORS
-    // 1) Fresh proxy
-    try {
-      const r = await fetch(`/api/fresh${urlPath}${bust}`, baseInit);
-      if (r.status !== 502) return r;
-    } catch {}
-    // 2) Legacy proxy
+    
+    // Try /api/proxy directly (most reliable)
     try {
       const r = await fetch(`/api/proxy${urlPath}${bust}`, baseInit);
+      if (r.ok || r.status === 401 || r.status === 403 || r.status === 400) {
+        // Return successful responses or auth/validation errors
+        return r;
+      }
+    } catch {}
+    
+    // Fallback to /api/fresh if proxy fails
+    try {
+      const r = await fetch(`/api/fresh${urlPath}${bust}`, baseInit);
       return r;
     } catch (e) {
       throw e;

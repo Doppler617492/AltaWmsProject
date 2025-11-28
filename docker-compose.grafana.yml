@@ -1,0 +1,43 @@
+# Grafana for Alta WMS Analytics
+# Add this to docker-compose.prod.yml or run standalone with:
+# docker compose -f docker-compose.grafana.yml up -d
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: alta-wms-grafana
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://46.224.54.239:3100
+      - GF_INSTALL_PLUGINS=
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_LOG_MODE=console
+      - GF_LOG_LEVEL=info
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    networks:
+      - wms-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  grafana-data:
+    driver: local
+
+networks:
+  wms-network:
+    name: alta-wms_alta-wms-network
+    external: true

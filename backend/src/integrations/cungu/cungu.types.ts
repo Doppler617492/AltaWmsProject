@@ -65,6 +65,15 @@ export interface CunguStockRecord {
   Dobavljac?: 'T' | 'F';
 }
 
+// Response from getStock API - per article with store breakdown
+export interface CunguStockItem {
+  Ident: string;            // Article code/SKU
+  Objekti: Array<{
+    Objekat: string;        // Store/warehouse name (e.g., "Prodavnica - Podgorica Centar")
+    Zaliha: number;         // Stock quantity at this location
+  }>;                       // Array of stores/warehouses with quantities
+}
+
 export interface CunguApiErrorResponse {
   errorCode: number;
   message: string;

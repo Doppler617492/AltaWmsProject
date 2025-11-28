@@ -32,6 +32,8 @@ export default function AnalyticsPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [teamsRank, setTeamsRank] = useState<any[]>([]);
+  const [showGrafana, setShowGrafana] = useState<boolean>(false);
+  const [activeGrafanaDashboard, setActiveGrafanaDashboard] = useState<string>('worker-productivity');
 
   // Initialize month/year after mount to prevent hydration mismatch
   useEffect(() => {
@@ -244,6 +246,67 @@ export default function AnalyticsPage() {
             <StatusChip label="Poslednji push" value={pushStatus?.last_push_at || '—'} />
             <StatusChip label="Period" value={`${range.from} → ${range.to}`} />
           </div>
+        </div>
+
+        {/* Grafana Dashboards Section */}
+        <div style={{ background:'rgba(15,23,42,0.75)', border:'1px solid rgba(148,163,184,0.25)', borderRadius:16, padding:20, marginBottom: 20 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexWrap:'wrap', gap:12 }}>
+            <div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 4px', color: '#fbbf24' }}>Grafana Dashboard Analitika</h2>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>Real-time vizualizacije i metrike u stvarnom vremenu</p>
+            </div>
+            <button onClick={()=>setShowGrafana(!showGrafana)} style={{...btn, fontSize: '1rem', padding: '10px 20px'}}>
+              {showGrafana ? '▼ Sakrij dashboard' : '▶ Prikaži dashboard'}
+            </button>
+          </div>
+          
+          {showGrafana && (
+            <>
+              {/* Dashboard tabs */}
+              <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+                <button 
+                  onClick={()=>setActiveGrafanaDashboard('worker-productivity')}
+                  style={{...btn, background: activeGrafanaDashboard === 'worker-productivity' ? 'rgba(250,204,21,0.25)' : 'rgba(250,204,21,0.1)'}}
+                >
+                  Produktivnost Radnika
+                </button>
+                <button 
+                  onClick={()=>setActiveGrafanaDashboard('receiving-operations')}
+                  style={{...btn, background: activeGrafanaDashboard === 'receiving-operations' ? 'rgba(250,204,21,0.25)' : 'rgba(250,204,21,0.1)'}}
+                >
+                  Operacije Prijema
+                </button>
+                <button 
+                  onClick={()=>setActiveGrafanaDashboard('shipping-dispatch')}
+                  style={{...btn, background: activeGrafanaDashboard === 'shipping-dispatch' ? 'rgba(250,204,21,0.25)' : 'rgba(250,204,21,0.1)'}}
+                >
+                  Otprema / Dispatch
+                </button>
+              </div>
+
+              {/* Grafana iframe */}
+              <div style={{ position:'relative', width:'100%', height:'800px', background:'rgba(0,0,0,0.3)', borderRadius:12, overflow:'hidden', border:'1px solid rgba(148,163,184,0.2)' }}>
+                <iframe
+                  src={`https://admin.cungu.com/grafana/d/${activeGrafanaDashboard}?orgId=1&from=now-7d&to=now&timezone=Europe%2FPodgorica&refresh=30s&kiosk=tv`}
+                  width="100%"
+                  height="100%"
+                  style={{ border:'none' }}
+                  title="Grafana Dashboard"
+                  allowFullScreen
+                />
+              </div>
+              
+              <div style={{ marginTop:12, padding:'12px 16px', background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.3)', borderRadius:8 }}>
+                <div style={{ fontSize:'0.85rem', color:'#93c5fd', marginBottom:4 }}>💡 <strong>Saveti:</strong></div>
+                <ul style={{ margin:0, paddingLeft:20, fontSize:'0.85rem', color:'rgba(255,255,255,0.7)' }}>
+                  <li>Dashboards se automatski osvježavaju svakih 30 sekundi</li>
+                  <li>Kliknite na grafiku da vidite više detalja</li>
+                  <li>Koristite time range kontrole za promenu perioda (gore desno)</li>
+                  <li>Dashboard je u TV režimu - optimizovan za prikaz bez interakcije</li>
+                </ul>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Health panel */}

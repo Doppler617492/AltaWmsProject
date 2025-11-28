@@ -159,8 +159,8 @@ export default function PwaMenu() {
     boxShadow: '0 4px 12px rgba(250,204,21,0.3)',
   };
 
-  const tileCount = isStoreManager ? 2 : 4;
-  const gridColumns = tileCount === 2 ? 'repeat(1, 1fr)' : 'repeat(2, 1fr)';
+  const tileCount = isStoreManager ? 3 : 5;
+  const gridColumns = tileCount <= 2 ? 'repeat(1, 1fr)' : 'repeat(2, 1fr)';
 
   return (
     <div style={{ padding: '16px', background: 'linear-gradient(180deg, #05070d 0%, #020304 100%)', minHeight: '100vh' }}>
@@ -227,9 +227,9 @@ export default function PwaMenu() {
         </div>
       )}
 
-        {/* Inventar (Popis) tile enabled */}
+        {/* Inventar Search tile - new feature */}
         <div 
-          onClick={() => router.push('/pwa/popis')} 
+          onClick={() => router.push('/pwa/inventar')} 
           style={tileStyle}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-4px)';
@@ -247,6 +247,31 @@ export default function PwaMenu() {
           </div>
           <div style={{ fontSize: 20, fontWeight: 700, color: '#fde68a' }}>Inventar</div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>
+            Pretraga zaliha po prodavnicama
+          </div>
+        </div>
+
+        {/* Popis (cycle count) tile */}
+        <div 
+          onClick={() => router.push('/pwa/popis')} 
+          style={tileStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 12px 40px 0 rgba(0, 0, 0, 0.4)';
+            e.currentTarget.style.borderColor = 'rgba(255,212,0,0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 8px 32px 0 rgba(0, 0, 0, 0.3)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+          }}
+        >
+          <div style={iconWrap}>
+            <LottiePlayer autoplay loop mode="normal" src="/icons/popis.json" style={{ width: 56, height: 56, filter: 'brightness(0) invert(1)' }} />
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#fde68a' }}>Popis</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>
+            Zadaci za popis
           </div>
         </div>
 

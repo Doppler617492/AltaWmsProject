@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { StockLocation } from '../entities/stock-location.entity';
 import { Item } from '../entities/item.entity';
 import { Inventory } from '../entities/inventory.entity';
@@ -8,10 +8,16 @@ import { ReceivingItem } from '../entities/receiving-item.entity';
 import { Location } from '../entities/location.entity';
 import { InventoryMovement } from '../entities/inventory-movement.entity';
 import { PantheonItem } from '../entities/pantheon-item.entity';
+import { Store } from '../entities/store.entity';
+import { StoreInventory } from '../entities/store-inventory.entity';
 import { PantheonCatalogService, SyncResult } from './pantheon-catalog.service';
+import { CunguStockService } from '../integrations/cungu/cungu-stock.service';
+import { SyncProgressService } from './sync-progress.service';
 
 @Injectable()
 export class StockService {
+  private readonly logger = new Logger(StockService.name);
+
   constructor(
     @InjectRepository(StockLocation)
     private stockLocationRepository: Repository<StockLocation>,
@@ -27,7 +33,13 @@ export class StockService {
     private receivingItemRepository: Repository<ReceivingItem>,
     @InjectRepository(PantheonItem)
     private pantheonItemRepository: Repository<PantheonItem>,
+    @InjectRepository(Store)
+    private storeRepository: Repository<Store>,
+    @InjectRepository(StoreInventory)
+    private storeInventoryRepository: Repository<StoreInventory>,
     private readonly pantheonCatalogService: PantheonCatalogService,
+    private readonly cunguStockService: CunguStockService,
+    private readonly syncProgressService: SyncProgressService,
   ) {}
 
   // 5.1 — Pregled po artiklu
@@ -429,5 +441,308 @@ export class StockService {
 
   async syncPantheonItems(options?: { force?: boolean; full?: boolean }): Promise<SyncResult> {
     return this.pantheonCatalogService.syncCatalog(options);
+  }
+
+  async syncCatalog(options?: { full?: boolean }): Promise<SyncResult> {
+    return this.pantheonCatalogService.syncCatalog(options);
+  }
+
+  // Get all stores/warehouses
+  async getStores() {
+    return this.storeRepository.find({
+      where: { is_active: true },
+      order: { name: 'ASC' },
+    });
+  }
+
+  // Get inventory for a specific store using Cungu getStock API
+  // The API returns Objekti array with per-store quantities
+  async getStoreInventory(storeId: number) {
+    const store = await this.storeRepository.findOne({ where: { id: storeId } });
+    if (!store) {
+      throw new Error(`Store with ID ${storeId} not found`);
+    }
+
+    // Read from database instead of live API
+    const inventoryItems = await this.storeInventoryRepository.find({
+      where: { store_id: storeId },
+      order: { item_ident: 'ASC' },
+    });
+
+    return {
+      store_id: store.id,
+      store_name: store.name,
+      store_code: store.code,
+      items: inventoryItems.map(item => ({
+        sku: item.item_ident,
+        name: item.item_name || item.item_ident,
+        quantity: Number(item.quantity),
+        uom: 'KOM',
+      })),
+      total_items: inventoryItems.length,
+      last_synced: inventoryItems[0]?.last_synced_at?.toISOString() || null,
+    };
+  }
+
+  // Sync inventory for all stores from Cungu API
+  async syncAllStoreInventory(syncId: string) {
+    const stores = await this.storeRepository.find({ where: { is_active: true } });
+    
+    this.syncProgressService.startSync(syncId, 'all_stores', stores.length);
+    
+    let totalCreated = 0;
+    let totalUpdated = 0;
+    let errors: string[] = [];
+
+    try {
+      // Fetch all stock items ONCE (with pagination handled internally)
+      this.logger.log('📥 Fetching all stock items from Cungu (one-time with pagination)...');
+      const allStockItems = await this.cunguStockService.fetchStockItems({
+        minQuantity: 0,
+      });
+      this.logger.log(`📥 Fetched ${allStockItems.length} total items. Processing for ${stores.length} stores...`);
+
+      for (let i = 0; i < stores.length; i++) {
+        // Check if cancelled
+        if (this.syncProgressService.isCancelled(syncId)) {
+          this.syncProgressService.cancelSync(syncId);
+          return {
+            total_stores: stores.length,
+            synced_stores: i,
+            total_created: totalCreated,
+            total_updated: totalUpdated,
+            cancelled: true,
+            errors: errors.length > 0 ? errors : undefined,
+          };
+        }
+
+        const store = stores[i];
+        this.syncProgressService.updateProgress(
+          syncId,
+          i + 1,
+          `Sinhronizujem ${store.name} (${i + 1}/${stores.length})...`,
+        );
+
+        try {
+          const result = await this.syncStoreInventoryWithSharedData(store.id, allStockItems);
+          totalCreated += result.created;
+          totalUpdated += result.updated;
+        } catch (error) {
+          errors.push(`${store.name}: ${error.message}`);
+        }
+      }
+
+      const result = {
+        total_stores: stores.length,
+        total_created: totalCreated,
+        total_updated: totalUpdated,
+        errors: errors.length > 0 ? errors : undefined,
+      };
+
+      this.syncProgressService.completeSync(syncId, result);
+      return result;
+    } catch (error) {
+      this.syncProgressService.errorSync(syncId, error.message);
+      throw error;
+    }
+  }
+
+  // Sync inventory for a specific store
+  async syncStoreInventory(storeId: number) {
+    const store = await this.storeRepository.findOne({ where: { id: storeId } });
+    if (!store) {
+      throw new Error(`Store with ID ${storeId} not found`);
+    }
+
+    // Fetch all stock items with Objekti breakdown from Cungu API
+    const stockItems = await this.cunguStockService.fetchStockItems({
+      minQuantity: 0, // Get all items including zero stock
+    });
+
+    // Filter for this specific store using the Objekti array
+    const storeInventory = this.cunguStockService.getStoreInventoryFromStock(
+      stockItems,
+      store.name,
+      store.code,
+    );
+
+    // Fetch article names from Pantheon catalog (Veleprodajni Magacin)
+    const skus = storeInventory.map(item => item.sku);
+    const items = skus.length > 0 ? await this.pantheonItemRepository.find({
+      where: { ident: In(skus) },
+      select: ['ident', 'naziv'],
+    }) : [];
+
+    const itemMap = new Map(items.map(i => [i.ident, i.naziv]));
+
+    // Upsert into store_inventory table
+    let created = 0;
+    let updated = 0;
+
+    for (const item of storeInventory) {
+      const itemName = itemMap.get(item.sku);
+      const existingRecord = await this.storeInventoryRepository.findOne({
+        where: { store_id: storeId, item_ident: item.sku },
+      });
+
+      if (existingRecord) {
+        existingRecord.quantity = item.quantity;
+        existingRecord.item_name = itemName || item.sku;
+        existingRecord.last_synced_at = new Date();
+        await this.storeInventoryRepository.save(existingRecord);
+        updated++;
+      } else {
+        const newRecord = this.storeInventoryRepository.create({
+          store_id: storeId,
+          item_ident: item.sku,
+          item_name: itemName || item.sku,
+          quantity: item.quantity,
+          last_synced_at: new Date(),
+        });
+        await this.storeInventoryRepository.save(newRecord);
+        created++;
+      }
+    }
+
+    return {
+      store_id: storeId,
+      store_name: store.name,
+      created,
+      updated,
+      total: created + updated,
+    };
+  }
+
+  // Sync inventory for a specific store using pre-fetched stock items
+  async syncStoreInventoryWithSharedData(storeId: number, allStockItems: any[]) {
+    const store = await this.storeRepository.findOne({ where: { id: storeId } });
+    if (!store) {
+      throw new Error(`Store with ID ${storeId} not found`);
+    }
+
+    // Filter for this specific store using the pre-fetched Objekti array
+    const storeInventory = this.cunguStockService.getStoreInventoryFromStock(
+      allStockItems,
+      store.name,
+      store.code,
+    );
+
+    // Fetch article names from Pantheon catalog (Veleprodajni Magacin)
+    const skus = storeInventory.map(item => item.sku);
+    const items = skus.length > 0 ? await this.pantheonItemRepository.find({
+      where: { ident: In(skus) },
+      select: ['ident', 'naziv'],
+    }) : [];
+
+    const itemMap = new Map(items.map(i => [i.ident, i.naziv]));
+
+    // Upsert into store_inventory table
+    let created = 0;
+    let updated = 0;
+
+    for (const item of storeInventory) {
+      const itemName = itemMap.get(item.sku);
+      const existingRecord = await this.storeInventoryRepository.findOne({
+        where: { store_id: storeId, item_ident: item.sku },
+      });
+
+      if (existingRecord) {
+        existingRecord.quantity = item.quantity;
+        existingRecord.item_name = itemName || item.sku;
+        existingRecord.last_synced_at = new Date();
+        await this.storeInventoryRepository.save(existingRecord);
+        updated++;
+      } else {
+        const newRecord = this.storeInventoryRepository.create({
+          store_id: storeId,
+          item_ident: item.sku,
+          item_name: itemName || item.sku,
+          quantity: item.quantity,
+          last_synced_at: new Date(),
+        });
+        await this.storeInventoryRepository.save(newRecord);
+        created++;
+      }
+    }
+
+    return {
+      store_id: storeId,
+      store_name: store.name,
+      created,
+      updated,
+      total: created + updated,
+    };
+  }
+
+  // Sync inventory for a specific store using page data (memory-efficient page processing)
+  async syncStoreInventoryWithPageData(storeId: number, pageStockItems: any[]) {
+    const store = await this.storeRepository.findOne({ where: { id: storeId } });
+    if (!store) {
+      throw new Error(`Store with ID ${storeId} not found`);
+    }
+
+    // Filter for this specific store from the page data
+    const storeInventory = this.cunguStockService.getStoreInventoryFromStock(
+      pageStockItems,
+      store.name,
+      store.code,
+    );
+
+    if (storeInventory.length === 0) {
+      // No items for this store in this page
+      return {
+        store_id: storeId,
+        store_name: store.name,
+        created: 0,
+        updated: 0,
+        total: 0,
+      };
+    }
+
+    // Fetch article names from Pantheon catalog for items in this page
+    const skus = storeInventory.map(item => item.sku);
+    const items = skus.length > 0 ? await this.pantheonItemRepository.find({
+      where: { ident: In(skus) },
+      select: ['ident', 'naziv'],
+    }) : [];
+
+    const itemMap = new Map(items.map(i => [i.ident, i.naziv]));
+
+    // Upsert into store_inventory table
+    let created = 0;
+    let updated = 0;
+
+    for (const item of storeInventory) {
+      const itemName = itemMap.get(item.sku);
+      const existingRecord = await this.storeInventoryRepository.findOne({
+        where: { store_id: storeId, item_ident: item.sku },
+      });
+
+      if (existingRecord) {
+        existingRecord.quantity = item.quantity;
+        existingRecord.item_name = itemName || item.sku;
+        existingRecord.last_synced_at = new Date();
+        await this.storeInventoryRepository.save(existingRecord);
+        updated++;
+      } else {
+        const newRecord = this.storeInventoryRepository.create({
+          store_id: storeId,
+          item_ident: item.sku,
+          item_name: itemName || item.sku,
+          quantity: item.quantity,
+          last_synced_at: new Date(),
+        });
+        await this.storeInventoryRepository.save(newRecord);
+        created++;
+      }
+    }
+
+    return {
+      store_id: storeId,
+      store_name: store.name,
+      created,
+      updated,
+      total: created + updated,
+    };
   }
 }

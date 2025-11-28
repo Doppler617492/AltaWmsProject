@@ -10,6 +10,7 @@ export default function StockDashboard() {
   const [hotspots, setHotspots] = useState<any>({ overloaded: [], negative: [], recent_conflicts: [] });
   const [loadingHS, setLoadingHS] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncingCatalog, setSyncingCatalog] = useState(false);
 
   const loadHotspots = async () => {
     try { setLoadingHS(true); const hs = await apiClient.get('/stock/hotspots'); setHotspots(hs); } catch { } finally { setLoadingHS(false); }
@@ -46,6 +47,24 @@ export default function StockDashboard() {
       alert(err?.message || 'Greška pri sinhronizaciji.');
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const runCatalogSync = async () => {
+    try {
+      setSyncingCatalog(true);
+      const result = await apiClient.post('/stock/sync-catalog', { full: true });
+      if (result?.skipped) {
+        alert('Katalog je nedavno sinhronizovan. Nema novih podataka.');
+      } else {
+        alert(
+          `Sinhronizacija kataloga završena.\nObrađeno: ${result?.processed ?? 0}\nUčitano: ${result?.upserted ?? 0} artikala`,
+        );
+      }
+    } catch (err: any) {
+      alert(err?.message || 'Greška pri sinhronizaciji kataloga.');
+    } finally {
+      setSyncingCatalog(false);
     }
   };
 
@@ -94,6 +113,19 @@ export default function StockDashboard() {
           {negCount > 0 && <span style={pill(colors.statusErr + '40', colors.statusErr)}>Negativne: {negCount}</span>}
           {overCount > 0 && <span style={pill(colors.statusWarn + '40', colors.statusWarn)}>Preopterećene: {overCount}</span>}
           {confCount > 0 && <span style={pill(colors.statusWarn + '40', colors.statusWarn)}>Konflikti: {confCount}</span>}
+          <button
+            style={refreshBtn}
+            onClick={runCatalogSync}
+            disabled={syncingCatalog}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = colors.bgPanelAlt;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+            }}
+          >
+            {syncingCatalog ? 'Sinhronišem…' : 'Sinhroniši Katalog'}
+          </button>
           <button
             style={refreshBtn}
             onClick={runManualSync}
@@ -408,7 +440,145 @@ function PantheonInventory() {
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [stores, setStores] = useState<any[]>([]);
+  const [activeStoreTab, setActiveStoreTab] = useState<number | null>(null);
+  const [loadingStores, setLoadingStores] = useState(false);
+  const [syncingStores, setSyncingStores] = useState(false);
+  const [syncingInventory, setSyncingInventory] = useState(false);
+  const [syncId, setSyncId] = useState<string | null>(null);
+  const [syncProgress, setSyncProgress] = useState<any>(null);
+  const [storeItemCounts, setStoreItemCounts] = useState<Record<number, number>>({});
   const pageSize = 50;
+
+  // Load stores on mount
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        setLoadingStores(true);
+        const storeList = await apiClient.get('/stock/stores');
+        setStores(storeList || []);
+        
+        // Fetch article counts for each store
+        const counts: Record<number, number> = {};
+        for (const store of (storeList || [])) {
+          try {
+            const inventory = await apiClient.get(`/stock/by-store/${store.id}`);
+            counts[store.id] = inventory?.items?.length || 0;
+          } catch (err) {
+            counts[store.id] = 0;
+          }
+        }
+        setStoreItemCounts(counts);
+      } catch (error) {
+        console.error('Error fetching stores:', error);
+      } finally {
+        setLoadingStores(false);
+      }
+    };
+    fetchStores();
+  }, []);
+
+  const syncStoresFromCungu = async () => {
+    try {
+      setSyncingStores(true);
+      const result = await apiClient.post('/stores/sync-from-stock-api', {});
+      alert(`Sinhronizacija prodavnica iz Stock API završena.\nKreirano: ${result.created}\nAžurirano: ${result.updated}\nUkupno: ${result.total}\n\nProdavnice sada koriste originalna Pantheon imena.`);
+      // Reload stores and counts
+      const storeList = await apiClient.get('/stock/stores');
+      setStores(storeList || []);
+      
+      // Refresh article counts
+      const counts: Record<number, number> = {};
+      for (const store of (storeList || [])) {
+        try {
+          const inventory = await apiClient.get(`/stock/by-store/${store.id}`);
+          counts[store.id] = inventory?.items?.length || 0;
+        } catch (err) {
+          counts[store.id] = 0;
+        }
+      }
+      setStoreItemCounts(counts);
+    } catch (err: any) {
+      alert(err?.message || 'Greška pri sinhronizaciji prodavnica.');
+    } finally {
+      setSyncingStores(false);
+    }
+  };
+
+  const syncAllStoreInventory = async () => {
+    try {
+      setSyncingInventory(true);
+      const newSyncId = `sync_${Date.now()}`;
+      setSyncId(newSyncId);
+      setSyncProgress(null);
+      
+      // Start sync
+      const startResult = await apiClient.post('/stock/sync-all-store-inventory', { syncId: newSyncId });
+      
+      // Poll for progress
+      const pollInterval = setInterval(async () => {
+        try {
+          const progress = await apiClient.get(`/stock/sync-progress/${newSyncId}`);
+          setSyncProgress(progress);
+          
+          if (progress.status === 'completed') {
+            clearInterval(pollInterval);
+            setSyncingInventory(false);
+            setSyncId(null);
+            alert(`Sinhronizacija zaliha završena.\n` +
+              `Prodavnica: ${progress.result.total_stores}\n` +
+              `Kreirano: ${progress.result.total_created}\n` +
+              `Ažurirano: ${progress.result.total_updated}\n` +
+              (progress.result.errors ? `\nGreške: ${progress.result.errors.join('; ')}` : '')
+            );
+            setSyncProgress(null);
+            
+            // Refresh article counts after sync
+            const storeList = await apiClient.get('/stock/stores');
+            const counts: Record<number, number> = {};
+            for (const store of (storeList || [])) {
+              try {
+                const inventory = await apiClient.get(`/stock/by-store/${store.id}`);
+                counts[store.id] = inventory?.items?.length || 0;
+              } catch (err) {
+                counts[store.id] = 0;
+              }
+            }
+            setStoreItemCounts(counts);
+          } else if (progress.status === 'cancelled') {
+            clearInterval(pollInterval);
+            setSyncingInventory(false);
+            setSyncId(null);
+            alert('Sinhronizacija otkazana.');
+            setSyncProgress(null);
+          } else if (progress.status === 'error') {
+            clearInterval(pollInterval);
+            setSyncingInventory(false);
+            setSyncId(null);
+            alert(`Greška: ${progress.error || 'Nepoznata greška'}`);
+            setSyncProgress(null);
+          }
+        } catch (err) {
+          console.error('Error polling progress:', err);
+        }
+      }, 1000); // Poll every second
+      
+    } catch (err: any) {
+      alert(err?.message || 'Greška pri sinhronizaciji zaliha.');
+      setSyncingInventory(false);
+      setSyncId(null);
+      setSyncProgress(null);
+    }
+  };
+
+  const cancelSync = async () => {
+    if (!syncId) return;
+    try {
+      await apiClient.post(`/stock/sync-cancel/${syncId}`, {});
+    } catch (err: any) {
+      console.error('Error cancelling sync:', err);
+    }
+  };
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -491,8 +661,150 @@ function PantheonInventory() {
     }
   }, [lastSync]);
 
+  // Render store inventory if a store tab is selected
+  if (activeStoreTab !== null) {
+    return (
+      <div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12, borderBottom: `1px solid ${colors.borderDefault}`, paddingBottom: 8 }}>
+          <button
+            style={{
+              ...btn,
+              background: activeStoreTab === null ? colors.brandYellow : 'transparent',
+              color: activeStoreTab === null ? '#000' : colors.textSecondary,
+            }}
+            onClick={() => setActiveStoreTab(null)}
+          >
+            Veleprodajni Magacin
+          </button>
+          {stores.map((store) => (
+            <button
+              key={store.id}
+              style={{
+                ...btn,
+                background: activeStoreTab === store.id ? colors.brandYellow : 'transparent',
+                color: activeStoreTab === store.id ? '#000' : colors.textSecondary,
+              }}
+              onClick={() => setActiveStoreTab(store.id)}
+            >
+              {store.name}
+            </button>
+          ))}
+        </div>
+        <StoreInventoryView storeId={activeStoreTab} onBack={() => setActiveStoreTab(null)} />
+      </div>
+    );
+  }
+
   return (
     <div>
+      {/* Store tabs */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, borderBottom: `1px solid ${colors.borderDefault}`, paddingBottom: 8, flexWrap: 'wrap' }}>
+        <button
+          style={{
+            ...btn,
+            background: activeStoreTab === null ? colors.brandYellow : 'transparent',
+            color: activeStoreTab === null ? '#000' : colors.textSecondary,
+          }}
+          onClick={() => setActiveStoreTab(null)}
+        >
+          Veleprodajni Magacin
+        </button>
+        {loadingStores ? (
+          <span style={{ padding: '8px 16px', fontSize: 13, color: colors.textSecondary }}>Učitavam prodavnice...</span>
+        ) : (
+          stores.map((store) => (
+            <button
+              key={store.id}
+              style={{
+                ...btn,
+                background: activeStoreTab === store.id ? colors.brandYellow : 'transparent',
+                color: activeStoreTab === store.id ? '#000' : colors.textSecondary,
+              }}
+              onClick={() => setActiveStoreTab(store.id)}
+            >
+              {store.name} {storeItemCounts[store.id] ? `(${storeItemCounts[store.id]})` : ''}
+            </button>
+          ))
+        )}
+        <button 
+          style={{
+            ...btn,
+            background: syncingStores ? colors.bgPanelAlt : colors.brandYellow,
+            color: '#000',
+            fontWeight: 600,
+          }} 
+          onClick={syncStoresFromCungu} 
+          disabled={syncingStores}
+        >
+          {syncingStores ? 'Sinhronišem...' : 'Sinhroniši Prodavnice'}
+        </button>
+        <button 
+          style={{
+            ...btn,
+            background: syncingInventory ? colors.bgPanelAlt : colors.brandYellow,
+            color: '#000',
+            fontWeight: 600,
+          }} 
+          onClick={syncAllStoreInventory} 
+          disabled={syncingInventory}
+        >
+          {syncingInventory ? (syncProgress ? `Sinhronišem (${syncProgress.current}/${syncProgress.total})...` : 'Sinhronišem...') : 'Sinhroniši Zalihe'}
+        </button>
+        {syncingInventory && (
+          <button 
+            style={{
+              ...btn,
+              background: colors.statusErr,
+              color: '#fff',
+              fontWeight: 600,
+            }} 
+            onClick={cancelSync}
+          >
+            Otkaži
+          </button>
+        )}
+      </div>
+
+      {/* Progress indicator */}
+      {syncingInventory && syncProgress && (
+        <div style={{
+          background: colors.bgPanelAlt,
+          border: `1px solid ${colors.borderDefault}`,
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 13, color: colors.textPrimary, fontWeight: 600 }}>
+              {syncProgress.message}
+            </span>
+            <span style={{ fontSize: 13, color: colors.brandYellow }}>
+              {syncProgress.current}/{syncProgress.total}
+            </span>
+          </div>
+          <div style={{ height: 8, background: colors.borderCard, borderRadius: 999, overflow: 'hidden' }}>
+            <div style={{ 
+              width: `${(syncProgress.current / syncProgress.total) * 100}%`, 
+              height: '100%', 
+              background: colors.brandYellow,
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
+        </div>
+      )}
+
+      <div style={{ 
+        background: 'rgba(100,150,200,0.1)', 
+        border: `1px solid rgba(100,150,200,0.3)`, 
+        borderRadius: 8, 
+        padding: 12, 
+        marginBottom: 12,
+        fontSize: 12,
+        color: colors.textSecondary
+      }}>
+        <strong>ℹ️ Veleprodajni Magacin (Pantheon katalog):</strong> Sadrži sve dostupne artikle sa imenima i specifikacijama. Sinhronizuje se automatski iz Cungu `getIdent` API kada kliknete "Sinhroniši Katalog" gore. Kada je katalizirana sinhronizovan, kliknite "Sinhroniši Zalihe" da popunite zalihe za sve prodavnice sa imenima iz ovog kataloga.
+      </div>
+
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
         <input
           placeholder="Pretraži Pantheon SKU / naziv / barkod"
@@ -502,12 +814,6 @@ function PantheonInventory() {
         />
         <button style={btn} onClick={() => setRefreshTick((tick) => tick + 1)}>
           Osvježi
-        </button>
-        <button style={btn} onClick={() => triggerSync(false)} disabled={syncing}>
-          {syncing ? 'Sinhronišem…' : 'Sinhroniši (inkrementalno)'}
-        </button>
-        <button style={btn} onClick={() => triggerSync(true)} disabled={syncing}>
-          {syncing ? 'Sinhronišem…' : 'Puna sinhronizacija'}
         </button>
         <span style={{ marginLeft: 'auto', fontSize: 12, color: colors.textSecondary }}>
           Poslednja sinhronizacija: {formattedLastSync} · Ukupno artikala: {total.toLocaleString('sr-Latn-RS')}
@@ -659,3 +965,99 @@ const table = { width:'100%', borderCollapse:'collapse', color: colors.textPrima
 const th = { textAlign: 'left' as const, padding: '12px 16px', borderBottom: `1px solid ${colors.borderDefault}`, backgroundColor: colors.bgPanelAlt, color: colors.brandYellow, fontSize: 12, fontWeight: 600, textTransform: 'uppercase' as const } as const;
 const td = { padding: '12px 16px', borderBottom: `1px solid ${colors.borderCard}`, fontSize: 13, color: colors.textSecondary } as const;
 const pill = (bg:string, color:string) => ({ background:bg, color, borderRadius:999, padding:'6px 12px', fontSize:12, fontWeight:600 } as const);
+
+// Store inventory view component
+function StoreInventoryView({ storeId, onBack }: { storeId: number; onBack: () => void }) {
+  const [inventory, setInventory] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchStoreInventory = async () => {
+    try {
+      setLoading(true);
+      const data = await apiClient.get(`/stock/by-store/${storeId}`);
+      setInventory(data);
+    } catch (error) {
+      console.error('Error fetching store inventory:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStoreInventory();
+  }, [storeId]);
+
+  if (loading) {
+    return <div style={{ padding: 20 }}>Učitavanje zaliha za prodavnicu...</div>;
+  }
+
+  if (!inventory) {
+    return <div style={{ padding: 20, color: colors.statusErr }}>Greška pri učitavanju zaliha.</div>;
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 16 }}>
+        <h3 style={{ margin: 0, color: colors.brandYellow, fontSize: 18, fontWeight: 700 }}>
+          {inventory.store_name} {inventory.store_code ? `(${inventory.store_code})` : ''}
+        </h3>
+        <div style={{ marginTop: 8, fontSize: 13, color: colors.textSecondary }}>
+          Ukupno artikala: {inventory.total_items || 0}
+          {inventory.last_synced && ` · Poslednja sinhronizacija: ${new Date(inventory.last_synced).toLocaleString('sr-Latn-RS')}`}
+        </div>
+        {inventory.error && (
+          <div style={{ marginTop: 8, padding: 12, background: 'rgba(220,53,69,0.15)', border: `1px solid rgba(220,53,69,0.4)`, borderRadius: 6, color: colors.statusErr, fontSize: 13 }}>
+            ⚠️ Greška: {inventory.error}
+          </div>
+        )}
+        {inventory.message && !inventory.error && (
+          <div style={{ marginTop: 8, padding: 12, background: colors.bgPanelAlt, border: `1px solid ${colors.borderDefault}`, borderRadius: 6, color: colors.textSecondary, fontSize: 13, whiteSpace: 'pre-wrap' }}>
+            ℹ️ {inventory.message}
+          </div>
+        )}
+      </div>
+      {inventory.items && inventory.items.length > 0 ? (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={table}>
+            <thead>
+              <tr>
+                <th style={th}>Šifra</th>
+                <th style={th}>Naziv</th>
+                <th style={th}>Količina</th>
+                <th style={th}>JM</th>
+                {inventory.items.some((i: any) => i.last_updated) && <th style={th}>Ažurirano</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {inventory.items.map((item: any, idx: number) => (
+                <tr
+                  key={idx}
+                  style={{ background: idx % 2 === 0 ? 'rgba(255,193,7,0.04)' : 'transparent' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = colors.bgPanelAlt)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = idx % 2 === 0 ? 'rgba(255,193,7,0.04)' : 'transparent')}
+                >
+                  <td style={td}>{item.sku}</td>
+                  <td style={td}>{item.name}</td>
+                  <td style={td}>{item.quantity}</td>
+                  <td style={td}>{item.uom}</td>
+                  {inventory.items.some((i: any) => i.last_updated) && (
+                    <td style={td}>{item.last_updated ? new Date(item.last_updated).toLocaleDateString('sr-Latn-RS') : '-'}</td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div style={{ padding: 20, textAlign: 'center', color: colors.textSecondary }}>
+          {inventory.error ? 'Nema dostupnih podataka zbog greške.' : 'Nema dostupnih zaliha za ovu prodavnicu.'}
+        </div>
+      )}
+      <div style={{ marginTop: 16 }}>
+        <button style={btn} onClick={onBack}>
+          ← Nazad na Veleprodajni Magacin
+        </button>
+      </div>
+    </div>
+  );
+}

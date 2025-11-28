@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { AiAgentModule } from './aiAgent/aiAgent.module';
@@ -83,6 +84,7 @@ import { join } from 'path';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     MulterModule.register({
       dest: './uploads',
     }),
