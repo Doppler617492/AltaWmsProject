@@ -87,6 +87,7 @@ export default function InventarScreen() {
   const [loadingInventory, setLoadingInventory] = useState(false);
   const [stores, setStores] = useState<Store[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [authError, setAuthError] = useState(false);
   const router = useRouter();
   
   const apiBase = typeof window !== 'undefined' ? `${window.location.origin}/api/fresh` : 'http://localhost:8000';
@@ -102,11 +103,21 @@ export default function InventarScreen() {
     // Decode user from token
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
+      
+      // Check if token has expired
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < now) {
+        localStorage.removeItem('token');
+        router.push('/');
+        return;
+      }
+      
       setUser({ 
         id: payload.sub, 
         username: payload.username, 
-        name: payload.name || payload.username,
-        role: payload.role 
+        name: payload.name || payload.fullName || payload.username,
+        role: payload.role,
+        permissions: payload.permissions || []
       });
     } catch {
       localStorage.removeItem('token');
@@ -119,10 +130,23 @@ export default function InventarScreen() {
         const response = await fetch(`${apiBase}/stock/stores`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
+      if (response.status === 401 || response.status === 403) {
+        // Token expired or insufficient permissions
+        setAuthError(true);
+        localStorage.removeItem('token');
+        setTimeout(() => router.push('/'), 3000);
+        return;
+      }        if (!response.ok) {
+          throw new Error(`Failed to load stores: ${response.status}`);
+        }
+        
         const storeList = await response.json();
         setStores(Array.isArray(storeList) ? storeList : []);
       } catch (error) {
         console.error('Error loading stores:', error);
+        // Don't redirect on stores error, user can still search articles
+        setStores([]);
       }
     };
     loadStores();
@@ -145,6 +169,18 @@ export default function InventarScreen() {
       const response = await fetch(`${apiBase}/stock/pantheon/items?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      if (response.status === 401 || response.status === 403) {
+        // Token expired or insufficient permissions
+        setAuthError(true);
+        localStorage.removeItem('token');
+        setTimeout(() => router.push('/'), 3000);
+        return;
+      }
+      
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.status} ${response.statusText}`);
+      }
       
       const data = await response.json();
       const items = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
@@ -178,6 +214,20 @@ export default function InventarScreen() {
           const response = await fetch(`${apiBase}/stock/by-store/${store.id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
+          
+          if (response.status === 401 || response.status === 403) {
+            // Token expired or insufficient permissions
+            localStorage.removeItem('token');
+            router.push('/');
+            return {
+              store_id: store.id,
+              store_name: store.name,
+              store_code: store.code,
+              quantity: 0,
+              last_synced: null
+            };
+          }
+          
           const data = await response.json();
           
           // Find the specific article in this store's inventory
@@ -244,6 +294,62 @@ export default function InventarScreen() {
 
   if (!user) {
     return null;
+  }
+
+  if (authError) {
+    return (
+      <div 
+        className="min-h-screen" 
+        style={{ 
+          background: 'linear-gradient(180deg, #0f1419 0%, #0a0e13 50%, #000000 100%)',
+          color: '#ffffff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}
+      >
+        <div style={{ 
+          textAlign: 'center',
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          borderRadius: 16,
+          padding: 32,
+          maxWidth: 400
+        }}>
+          <div style={{ 
+            fontSize: 24, 
+            fontWeight: 700, 
+            color: '#ef4444',
+            marginBottom: 16
+          }}>
+            Nemate dozvolu
+          </div>
+          <div style={{ 
+            fontSize: 16, 
+            lineHeight: '1.5',
+            color: 'rgba(255, 255, 255, 0.8)',
+            marginBottom: 20
+          }}>
+            Vaš token je istekao ili nemate dozvolu za pristup ovoj stranici.
+          </div>
+          <div style={{ 
+            fontSize: 14, 
+            color: 'rgba(255, 255, 255, 0.6)',
+            marginBottom: 16
+          }}>
+            Korisničko ime: <strong>admin</strong><br />
+            Lozinka: <strong>Dekodera1989@</strong>
+          </div>
+          <div style={{ 
+            fontSize: 13, 
+            color: 'rgba(255, 255, 255, 0.5)'
+          }}>
+            Preusmeriće vas na stranicu za prijavu za 3 sekunde...
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
