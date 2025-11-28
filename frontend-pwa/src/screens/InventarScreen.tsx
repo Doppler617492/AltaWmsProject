@@ -89,12 +89,20 @@ export default function InventarScreen() {
   const [user, setUser] = useState<any>(null);
   const [authError, setAuthError] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   
   const apiBase = typeof window !== 'undefined' ? `${window.location.origin}/api/fresh` : 'http://localhost:8000';
 
+  // Handle client-side mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Load user and stores on mount
   useEffect(() => {
+    if (!mounted) return;
+    
     const token = localStorage.getItem('token');
     if (!token) {
       setInitializing(false);
@@ -155,7 +163,7 @@ export default function InventarScreen() {
       }
     };
     loadStores();
-  }, [router]);
+  }, [router, mounted]);
 
   const searchArticles = async () => {
     if (!searchTerm.trim()) {
@@ -297,7 +305,7 @@ export default function InventarScreen() {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  if (initializing || !user) {
+  if (!mounted || initializing || !user) {
     return (
       <div 
         className="min-h-screen" 
