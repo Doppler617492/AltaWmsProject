@@ -1,15 +1,15 @@
 import Head from 'next/head';
 import type { AppProps } from 'next/app';
 
-const DEFAULT_TITLE = 'Alta WMS PWA';
-const DEFAULT_DESCRIPTION = 'Alta WMS Progressive Web App';
+const DEFAULT_TITLE = process.env.NEXT_PUBLIC_APP_TITLE || 'Alta WMS PWA';
+const DEFAULT_DESCRIPTION = process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Alta WMS Progressive Web App';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>{DEFAULT_TITLE}</title>
-        <meta name="description" content={DEFAULT_DESCRIPTION} />
+        <title>{DEFAULT_TITLE || 'Alta WMS PWA'}</title>
+        <meta name="description" content={DEFAULT_DESCRIPTION || 'Alta WMS Progressive Web App'} />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="icon" href="/logo.svg" />
         <link rel="manifest" href="/manifest.json" />
