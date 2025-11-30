@@ -99,7 +99,7 @@ export class StockController {
     @Query('offset') offset?: string,
   ) {
     const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
-    this.ensureRole(role, ['admin', 'menadzer', 'sef_magacina', 'sef', 'sef_prodavnice']);
+    this.ensureRole(role, ['admin', 'menadzer', 'magacioner', 'sef_magacina', 'sef', 'sef_prodavnice']);
     return this.stockService.getPantheonItems({
       search: search || undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
@@ -125,7 +125,7 @@ export class StockController {
   @Get('stores')
   async getStores(@Req() req: any) {
     const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
-    this.ensureRole(role, ['admin', 'menadzer', 'sef_magacina', 'sef', 'sef_prodavnice']);
+    this.ensureRole(role, ['admin', 'menadzer', 'magacioner', 'sef_magacina', 'sef', 'sef_prodavnice']);
     return this.stockService.getStores();
   }
 
@@ -133,7 +133,7 @@ export class StockController {
   @Get('by-store/:storeId')
   async getStoreInventory(@Req() req: any, @Param('storeId') storeId: string) {
     const role = (req.user?.role || (Array.isArray(req.user?.roles) ? req.user.roles[0] : '') || '').toString();
-    this.ensureRole(role, ['admin', 'menadzer', 'sef_magacina', 'sef', 'sef_prodavnice']);
+    this.ensureRole(role, ['admin', 'menadzer', 'magacioner', 'sef_magacina', 'sef', 'sef_prodavnice']);
     return this.stockService.getStoreInventory(parseInt(storeId, 10));
   }
 
