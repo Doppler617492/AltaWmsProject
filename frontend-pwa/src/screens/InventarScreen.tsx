@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { logger } from '../../lib/logger';
 import PwaHeader from '../../components/PwaHeader';
 import PwaBackButton from '../../components/PwaBackButton';
 
@@ -206,7 +207,7 @@ export default function InventarScreen() {
         await loadInventoryForArticle(items[0]);
       }
     } catch (error) {
-      console.error('Search error:', error);
+      logger.error('Search error', error, 'InventarScreen');
       setSearchResults([]);
     } finally {
       setLoading(false);

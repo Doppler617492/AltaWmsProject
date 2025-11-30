@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { apiClient } from '../lib/apiClient';
 import { startHeartbeat } from '../lib/heartbeat';
+import { logger } from '../lib/logger';
 import PwaHeader from '../components/PwaHeader';
 import dynamic from 'next/dynamic';
 
@@ -31,7 +32,7 @@ function DashboardPage() {
         setLoading(true);
         // Load user info
         const meRes = await apiClient.get('/auth/me');
-        console.log('User info from /auth/me:', meRes);
+        logger.debug('User info from /auth/me', meRes, 'Dashboard');
         setMe(meRes);
         
         // Calculate online status based on last_activity
@@ -47,7 +48,7 @@ function DashboardPage() {
         // Reload user info after heartbeat to get fresh last_activity
         try {
           const meResAfter = await apiClient.get('/auth/me');
-          console.log('User info after heartbeat:', meResAfter);
+          logger.debug('User info after heartbeat', meResAfter, 'Dashboard');
           if (meResAfter?.last_activity) {
             const lastAct = new Date(meResAfter.last_activity);
             const now = new Date();
@@ -87,13 +88,13 @@ function DashboardPage() {
           // Try to get all active receivings first (includes all DRAFT, IN_PROGRESS, ON_HOLD)
           try {
             const allRecList = await apiClient.get('/receiving/active');
-            console.log('All active receivings:', allRecList);
+            logger.debug('All active receivings', allRecList, 'Dashboard');
             const allRecs = Array.isArray(allRecList) ? allRecList : [];
             
             // Also get my-active to mark which ones are assigned to me
             try {
               const myRecList = await apiClient.get('/receiving/my-active');
-              console.log('My active receivings:', myRecList);
+              logger.debug('My active receivings', myRecList, 'Dashboard');
               const myRecIds = new Set((Array.isArray(myRecList) ? myRecList : []).map((r: any) => r.id));
               
               // Mark assigned receivings
@@ -101,7 +102,7 @@ function DashboardPage() {
                 ...rec,
                 is_mine: myRecIds.has(rec.id)
               }));
-              console.log('Merged receivings:', marked);
+              logger.debug('Merged receivings', marked, 'Dashboard');
               setReceivings(marked);
             } catch (e: any) {
               console.warn('Failed to load my-active receivings:', e);
@@ -113,7 +114,7 @@ function DashboardPage() {
             console.warn('Failed to load all active receivings:', e);
             try {
               const myRecList = await apiClient.get('/receiving/my-active');
-              console.log('Fallback: My active receivings:', myRecList);
+              logger.debug('Fallback: My active receivings', myRecList, 'Dashboard');
               setReceivings(Array.isArray(myRecList) ? myRecList : []);
             } catch (e2: any) {
               console.error('Failed to load my-active receivings:', e2);
@@ -148,7 +149,7 @@ function DashboardPage() {
     const sendImmediateHeartbeat = async () => {
       try {
         const result = await apiClient.patch('/pwa/heartbeat', { device_id: 'dashboard' });
-        console.log('Heartbeat sent:', result);
+        logger.debug('Heartbeat sent', result, 'Dashboard');
         return true;
       } catch (e: any) {
         console.error('Heartbeat failed:', e);

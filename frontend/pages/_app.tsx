@@ -1,10 +1,32 @@
+import React from 'react';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { logger } from '../lib/logger';
 import '../styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {
+  // Initialize error logging
+  React.useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      logger.error('Unhandled promise rejection', { reason: event.reason }, 'App');
+    };
+    
+    const handleError = (event: ErrorEvent) => {
+      logger.error('Unhandled error', { error: event.error, message: event.message }, 'App');
+    };
+    
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
+    
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
+    };
+  }, []);
+
   return (
-    <>
+    <ErrorBoundary>
       <Head>
         <title>Alta WMS</title>
         <meta name="description" content="Alta Warehouse Management System" />
@@ -34,6 +56,6 @@ export default function App({ Component, pageProps }: AppProps) {
         }}
       />
       <Component {...pageProps} />
-    </>
+    </ErrorBoundary>
   );
 }

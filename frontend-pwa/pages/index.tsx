@@ -52,7 +52,12 @@ export default function Home() {
         const io = (window as any).io;
         if (!io) return;
         const backendBase = (process.env.NEXT_PUBLIC_API_URL as string) || `${window.location.protocol}//localhost:8000`;
-        socket = io(`${backendBase}/ws/assignments`, { transports: ['websocket'] });
+        socket = io(`${backendBase}/ws/assignments`, { 
+          transports: ['polling', 'websocket'],
+          reconnection: true,
+          reconnectionDelayMax: 5000,
+          timeout: 15000
+        });
         socket.on('assignment:new', (p: any) => {
           try {
             const assignees: number[] = Array.isArray(p?.assignees) ? p.assignees : [];

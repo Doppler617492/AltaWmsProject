@@ -1,0 +1,271 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║         🎉 CUNGU API DUAL-CREDENTIAL IMPLEMENTATION - SNAPSHOT 🎉          ║
+║                                                                            ║
+║                         ✅ PRODUCTION READY ✅                            ║
+║                                                                            ║
+║                    Date: November 29, 2025, 15:19:08                      ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 QUICK ACCESS - START HERE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For Quick Overview (3 min):
+  → START_HERE.md
+  → COMPLETION_SUMMARY.md
+
+For Complete Details (30 min):
+  → snapshot_20251129_151908/SNAPSHOT_MANIFEST.md
+  → snapshot_20251129_151908/CUNGU_ARCHITECTURE.md
+
+For Deployment (15 min):
+  → snapshot_20251129_151908/CUNGU_DEPLOYMENT_CHECKLIST.md
+
+For Reference:
+  → INDEX.md (navigation & commands)
+  → README.md (troubleshooting)
+
+For Verification:
+  → SNAPSHOT_VERIFICATION_REPORT.txt (detailed checks)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 WHAT YOU HAVE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 9 Source Code Files (49K)
+   • cungu.client.ts (6.6K)
+   • cungu-sync.service.ts (9.2K)
+   • cungu-stock.service.ts (7.8K)
+   • cungu-receiving.service.ts (5.7K)
+   • cungu-sync.controller.ts (4.6K)
+   • cungu-shipping.service.ts (3.7K)
+   • cungu-scheduler.service.ts (2.3K)
+   • cungu.types.ts (2.0K)
+   • cungu.module.ts (1.1K)
+
+✅ 2 Configuration Files (5.5K)
+   • docker-compose.yml (production deployment)
+   • .env (environment fallback)
+
+✅ 6+ Documentation Files (~73K)
+   • SNAPSHOT_MANIFEST.md
+   • CUNGU_ARCHITECTURE.md
+   • CUNGU_DEPLOYMENT_CHECKLIST.md
+   • CUNGU_API_PERSISTENCE.md
+   • CUNGU_SYNC_SETUP.md
+   • README.md
+
+✅ Compressed Archive (29K)
+   • snapshot_20251129_151908.tar.gz (easy distribution)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 CREDENTIALS INCLUDED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Document API (Shipping/Receiving):
+  Username: CunguWMS
+  Password: C!g#2W4s5#$M6
+  Services: CunguShippingService, CunguReceivingService
+
+Stock API (Inventory):
+  Username: TestCungu
+  Password: webshopapi24
+  Services: CunguStockService
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ QUICK COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Review Implementation:
+  cat snapshots/COMPLETION_SUMMARY.md
+
+Extract Archive:
+  cd snapshots && tar -xzf snapshot_20251129_151908.tar.gz
+
+Restore to Server:
+  cp -r snapshot_20251129_151908/backend/src/integrations/cungu/* \
+        /opt/alta-wms/backend/src/integrations/cungu/
+  cp snapshot_20251129_151908/{docker-compose.yml,.env} /opt/alta-wms/
+
+Rebuild & Deploy:
+  cd /opt/alta-wms
+  docker-compose build --no-cache backend
+  docker-compose up -d
+
+Verify Deployment:
+  curl -X POST https://admin.cungu.com/api/fresh/integrations/cungu/sync \
+    -H "Content-Type: application/json" -d '{}'
+  # Expected: 200 OK
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ IMPLEMENTATION STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ WebSocket Infrastructure Fixed
+✅ Dual-Credential Architecture Implemented
+✅ All Services Using Correct Credentials
+✅ Password Escaping Fixed ($$M6 in YAML)
+✅ API Endpoints Returning 200 OK
+✅ No 401 Authentication Errors
+✅ Token Caching Working
+✅ Production Build Verified
+✅ All Changes Persistent on Disk
+✅ Complete Documentation Created
+✅ Comprehensive Backup Ready
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 KEY FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Dual-Credential Support
+   Different credentials for Documents (CunguWMS) and Stock (TestCungu)
+
+✅ Automatic Routing
+   Services don't need to specify credentials - routing is automatic
+
+✅ Token Caching
+   Independent token caching per credential set
+   55-minute TTL per token
+
+✅ Auto-Refresh
+   Tokens automatically refresh on expiration
+   401 errors trigger immediate retry with fresh token
+
+✅ Error Handling
+   Automatic retry up to 3 times on authentication failure
+   401 converted to 503 for proper HTTP semantics
+
+✅ Production Ready
+   Tested and verified working end-to-end
+   Ready for immediate deployment
+
+✅ Persistence
+   All changes stored on persistent disk
+   Survives server restarts automatically
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 NEXT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 📖 Read START_HERE.md (this directory)
+   → Quick overview and navigation guide
+
+2. 📊 Review COMPLETION_SUMMARY.md
+   → Executive summary and checklist
+
+3. 💾 Store Backup
+   → Copy snapshot_20251129_151908.tar.gz to USB or Cloud
+   → Recommended: Google Drive, OneDrive, or USB drive
+
+4. 👥 Share with Team
+   → Document snapshot location
+   → Share access information
+   → Explain recovery procedures
+
+5. 🚀 Deploy When Ready
+   → Follow CUNGU_DEPLOYMENT_CHECKLIST.md
+   → Extract archive
+   → Restore files to /opt/alta-wms/
+   → Rebuild and test
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📖 DOCUMENTATION MAP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This Directory (snapshots/):
+
+START_HERE.md
+  ↓ Quick overview & getting started
+COMPLETION_SUMMARY.md
+  ↓ Executive summary & deployment checklist
+INDEX.md
+  ↓ Master index & navigation guide
+README.md
+  ↓ Quick reference & troubleshooting
+SNAPSHOT_VERIFICATION_REPORT.txt
+  ↓ Detailed verification checklist
+
+Within snapshot_20251129_151908/:
+
+SNAPSHOT_MANIFEST.md ⭐
+  ↓ Complete file inventory (START HERE FOR DETAILS)
+CUNGU_ARCHITECTURE.md
+  ↓ Technical architecture & design
+CUNGU_DEPLOYMENT_CHECKLIST.md
+  ↓ Step-by-step verification
+CUNGU_API_PERSISTENCE.md
+  ↓ Persistence guarantees & server restart behavior
+CUNGU_SYNC_SETUP.md
+  ↓ Original setup documentation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 PRO TIPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Archive is Small (29K):
+  → Easy to email or share
+  → Fast to download and extract
+  → Copy to USB drive easily
+
+Compression Ratio is Excellent (4.4x):
+  → 128K uncompressed → 29K compressed
+  → Good for backup storage
+
+All Files Persistent:
+  → No need to recreate anything
+  → Just extract and restore
+  → Server restarts work automatically
+
+Complete Documentation:
+  → Every file documented
+  → Deployment procedures included
+  → Troubleshooting guide provided
+  → Recovery instructions clear
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📞 QUICK HELP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+How do I understand the implementation?
+  → Read CUNGU_ARCHITECTURE.md (8 min)
+
+How do I deploy this?
+  → Follow CUNGU_DEPLOYMENT_CHECKLIST.md (10 min)
+
+What if something goes wrong?
+  → See README.md "Restoration Troubleshooting" section
+
+How do I restore from backup?
+  → See README.md "Restoration Instructions" section
+
+Can I add this to git?
+  → See README.md "Integration with Version Control" section
+
+Should I create new snapshots?
+  → Yes, after major changes
+  → See README.md "Creating New Snapshots" section
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ STATUS: PRODUCTION READY ✨
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Implementation:     ✅ Complete & Tested
+Configuration:      ✅ Correct & Verified
+Documentation:      ✅ Comprehensive & Clear
+Backup:            ✅ Created & Compressed
+Archive:           ✅ Ready for distribution
+Deployment:        ✅ Ready to go live
+
+You can deploy with confidence. All verifications passed.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Created: November 29, 2025, 15:19:08
+Location: /Users/doppler/Desktop/apps/Alta WMS/snapshots/
+Archive: snapshot_20251129_151908.tar.gz (29K)
+
+For detailed information, start with: START_HERE.md
+
+═══════════════════════════════════════════════════════════════════════════════

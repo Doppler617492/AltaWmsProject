@@ -33,6 +33,11 @@ async function bootstrap() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
   
+  // Health check endpoint
+  app.use('/health', (req: any, res: any) => {
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  });
+  
   // Enable CORS for frontend and future Zebra handheld
   const allowedOrigins = process.env.CORS_ORIGINS 
     ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
@@ -47,6 +52,9 @@ async function bootstrap() {
         'https://pwa.cungu.com',
         'https://tv.cungu.com',
         'https://api.cungu.com',
+        'https://cungu.com',
+        'http://alta-wms-frontend-admin:3000',
+        'http://alta-wms-frontend-pwa:3000',
       ];
   
   app.enableCors({
@@ -74,6 +82,9 @@ async function bootstrap() {
   app.useWebSocketAdapter(new SocketIoAdapter(app, allowedOrigins));
   await app.listen(port as number, '0.0.0.0');
   
-  console.log(`🚀 Alta WMS Backend listening on port ${port}`);
+  // Structured logging instead of console.log
+  const logger = app.get('Logger', console);
+  logger.log(`🚀 Alta WMS Backend listening on port ${port}`, 'Bootstrap');
+  logger.log(`✅ Health check available at /health`, 'Bootstrap');
 }
 bootstrap();

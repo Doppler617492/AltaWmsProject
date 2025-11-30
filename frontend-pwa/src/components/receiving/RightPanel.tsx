@@ -27,7 +27,7 @@ export default function RightPanel({
     // Simple celebration effect
     if (item.requested > 0 && received >= item.requested) {
       // You can add confetti here if you want to install canvas-confetti
-      console.log('🎉 100% match!');
+      // 100% match achieved
     }
   };
 

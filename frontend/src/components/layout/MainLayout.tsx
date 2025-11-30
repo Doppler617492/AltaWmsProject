@@ -92,13 +92,19 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           window.setTimeout(connect, 1200);
           return;
         }
-        // WebSocket host and path (prod: https://admin.cungu.com/socket.io/, dev fallback via envs)
-        // Prefer explicit env base in production to avoid localhost fallbacks
-        const base =
-          process.env.NEXT_PUBLIC_WS_BASE ||
-          (process.env.NODE_ENV === 'production'
-            ? 'https://admin.cungu.com'
-            : 'http://localhost:8000');
+        // WebSocket host and path - use window.location.origin directly
+        // This is the most reliable way to get the current origin
+        let base = 'http://localhost:8000'; // fallback for SSR
+        if (typeof window !== 'undefined' && window.location) {
+          base = window.location.origin;
+        }
+        // Allow override via env var
+        if (process.env.NEXT_PUBLIC_WS_BASE) {
+          base = process.env.NEXT_PUBLIC_WS_BASE;
+        }
+        
+        // Log the WebSocket base URL for debugging
+        console.log('[WS] Connecting with base:', base, 'window.location.origin:', typeof window !== 'undefined' ? window.location.origin : 'SSR');
         const wsPath =
           process.env.NEXT_PUBLIC_WS_URL ||
           process.env.NEXT_PUBLIC_WS_PATH ||
@@ -117,13 +123,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
         const perfNs = `${base.replace(/\/$/, "")}/ws/performance`;
         socket = io(perfNs, {
-          transports: ["websocket"],
+          transports: ["polling"],  // Use polling only for better SSL compatibility
           path: wsPath,
           query: { kioskToken: token },
           reconnection: true,
           reconnectionDelayMax: 5000,
           timeout: 15000,
         });
+        
         console.info("[WS] performance socket connecting");
         window.__websocketStatus = window.__websocketStatus || {};
         window.__websocketStatus.performance = window.__websocketStatus.performance || {
@@ -171,55 +178,37 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               receivingItems: number;
               shippingItems: number;
             }>();
-
-            const prev = prevMetricsRef.current;
-            workers.forEach((w: any) => {
-              const name =
-                String(w?.name || w?.username || w?.full_name || w?.worker_name || `#${w?.user_id ?? ""}`).trim() ||
-                "Nepoznat magacioner";
-              const receivingOrders = Number(w?.receiving?.box_completed || 0);
-              const shippingOrders = Number(w?.shipping?.box_completed || 0);
-              const receivingItems = Number(w?.receiving?.items_completed || 0);
-              const shippingItems = Number(w?.shipping?.items_completed || 0);
-
-              const snapshot = {
-                receivingOrders,
-                shippingOrders,
-                receivingItems,
-                shippingItems,
-              };
-
-              if (prev && prev.has(name)) {
-                const previous = prev.get(name)!;
-                const deltaReceivingOrders = receivingOrders - previous.receivingOrders;
-                const deltaShippingOrders = shippingOrders - previous.shippingOrders;
-                const deltaReceivingItems = receivingItems - previous.receivingItems;
-                const deltaShippingItems = shippingItems - previous.shippingItems;
-
-                if (deltaReceivingOrders > 0) {
+            for (const w of workers) {
+              if (!w?.worker_id) continue;
+              nextMap.set(w.worker_id, {
+                receivingOrders: w.receiving_orders || 0,
+                shippingOrders: w.shipping_orders || 0,
+                receivingItems: w.receiving_items || 0,
+                shippingItems: w.shipping_items || 0,
+              });
+              if (prevMetricsRef.current?.has(w.worker_id)) {
+                const prev = prevMetricsRef.current.get(w.worker_id)!;
+                const current = nextMap.get(w.worker_id)!;
+                const deltaOrders =
+                  current.receivingOrders +
+                  current.shippingOrders -
+                  (prev.receivingOrders + prev.shippingOrders);
+                const deltaItems =
+                  current.receivingItems +
+                  current.shippingItems -
+                  (prev.receivingItems + prev.shippingItems);
+                if (deltaOrders > 0 || deltaItems > 0) {
+                  const area = current.receivingOrders > prev.receivingOrders ? "PRIJEM" : "OTPREMA";
                   pushAlert({
-                    title: name,
-                    area: "PRIJEM",
-                    deltaOrders: deltaReceivingOrders,
-                    deltaItems: Math.max(deltaReceivingItems, 0),
-                    totalOrders: receivingOrders,
-                  });
-                }
-
-                if (deltaShippingOrders > 0) {
-                  pushAlert({
-                    title: name,
-                    area: "OTPREMA",
-                    deltaOrders: deltaShippingOrders,
-                    deltaItems: Math.max(deltaShippingItems, 0),
-                    totalOrders: shippingOrders,
+                    title: w.worker_name || `Worker ${w.worker_id}`,
+                    area,
+                    deltaOrders,
+                    deltaItems,
+                    totalOrders: current.receivingOrders + current.shippingOrders,
                   });
                 }
               }
-
-              nextMap.set(name, snapshot);
-            });
-
+            }
             prevMetricsRef.current = nextMap;
           } catch (err) {
             console.error("Perf socket update error", err);
@@ -231,8 +220,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         try {
           const assignNs = `${base.replace(/\/$/, "")}/ws/assignments`;
           assignmentsSocket = io(assignNs, {
-            transports: ["websocket"],
+            transports: ["polling"],  // Use polling only for better SSL compatibility
             path: wsPath,
+            reconnection: true,
+            reconnectionDelayMax: 5000,
+            timeout: 15000,
           });
 
           assignmentsSocket.on("task:completed", (payload: any) => {
@@ -338,7 +330,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
             }
           });
         } catch (e) {
-          // Ignore WebSocket connection errors
+          console.warn("Assignments WebSocket connection failed:", e);
         }
 
         socket.on("connect_error", (err: any) => {
@@ -365,13 +357,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               socket.disconnect();
             } catch {}
           }
-                  if (assignmentsSocket) {
-                    try {
-                      assignmentsSocket.off("task:completed");
-                      assignmentsSocket.off("task:created");
-                      assignmentsSocket.disconnect();
-                    } catch {}
-                  }
+          if (assignmentsSocket) {
+            try {
+              assignmentsSocket.off("task:completed");
+              assignmentsSocket.off("task:created");
+              assignmentsSocket.disconnect();
+            } catch {}
+          }
           timeoutsRef.current.forEach((t) => clearTimeout(t));
           timeoutsRef.current = [];
         };
@@ -382,6 +374,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       }
     };
 
+    // Re-enable WebSocket connections with SSL-compatible transport configuration
     connect();
   }, [pushAlert]);
 
@@ -532,3 +525,5 @@ const wsBannerStyle = {
   alignItems: "center",
   gap: 6,
 };
+
+export default MainLayout;

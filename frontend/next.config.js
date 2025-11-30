@@ -12,6 +12,12 @@ const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  // Remove build-time console logs in production
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn']
+    } : false,
+  },
   // Avoid ETag/304 on API routes that breaks client JSON handling
   generateEtags: false,
   // Force a unique build ID to hard-bust any cached chunks on client

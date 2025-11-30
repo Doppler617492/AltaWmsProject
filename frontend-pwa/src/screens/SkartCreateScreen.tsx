@@ -104,7 +104,8 @@ const SkartCreateScreen = () => {
         // Ako i dalje nema poklapanja, NE uzimaj prvi rezultat automatski
         // Korisnik može da unese custom šifru i naziv
         if (!selected) {
-          console.log('Nema tačnog poklapanja za šifru:', trimmed, 'Rezultati:', results.length);
+          // No exact match for code - show search results
+          logger.debug('No exact match for code', { trimmed, resultsCount: results.length }, 'SkartCreate');
           return; // Ne menjaj ništa - korisnik može da unese naziv ručno
         }
         

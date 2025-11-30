@@ -1,12 +1,34 @@
+import React from 'react';
 import Head from 'next/head';
 import type { AppProps } from 'next/app';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { logger } from '../lib/logger';
 
 const DEFAULT_TITLE = process.env.NEXT_PUBLIC_APP_TITLE || 'Alta WMS PWA';
 const DEFAULT_DESCRIPTION = process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Alta WMS Progressive Web App';
 
 export default function App({ Component, pageProps }: AppProps) {
+  // Initialize error logging for PWA
+  React.useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      logger.error('Unhandled promise rejection', { reason: event.reason }, 'PWA-App');
+    };
+    
+    const handleError = (event: ErrorEvent) => {
+      logger.error('Unhandled error', { error: event.error, message: event.message }, 'PWA-App');
+    };
+    
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
+    
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
+    };
+  }, []);
+
   return (
-    <>
+    <ErrorBoundary>
       <Head>
         <title>{DEFAULT_TITLE || 'Alta WMS PWA'}</title>
         <meta name="description" content={DEFAULT_DESCRIPTION || 'Alta WMS Progressive Web App'} />
@@ -74,7 +96,7 @@ export default function App({ Component, pageProps }: AppProps) {
         }
       `}</style>
       <Component {...pageProps} />
-    </>
+    </ErrorBoundary>
   );
 }
 
